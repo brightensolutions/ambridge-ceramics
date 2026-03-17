@@ -5,21 +5,32 @@ import Navbar from "../../../../components/Navbar";
 import Footer from "../../../../components/Footer";
 import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
-import { useGLTF, OrbitControls, Center } from "@react-three/drei";
+import { useGLTF, OrbitControls, Center, Bounds } from "@react-three/drei";
 import { use } from "react";
 import { useState, Suspense, useEffect } from "react";
+import * as THREE from 'three';
 
-// ✅ Model Component with zoomed out scale
+// ✅ Model Component with proper scaling and positioning
 function Model({ url }: { url: string }) {
     const { scene } = useGLTF(url);
-
-    return (
-        <primitive
-            object={scene}
-            scale={0.4}              // 👈 Smaller scale for more zoomed out view
-            position={[0, -0.8, 0]}  // 👈 Adjusted position to center better
-        />
-    );
+    
+    // Clone the scene to allow for independent modifications
+    const clonedScene = scene.clone();
+    
+    // Center and scale the model properly
+    const box = new THREE.Box3().setFromObject(clonedScene);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    
+    // Calculate scale to fit in view (max dimension around 5 units)
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const scale = 4 / maxDim; // Scale to fit nicely in view
+    
+    // Position to center and lift slightly
+    clonedScene.position.set(-center.x * scale, -center.y * scale + 1, -center.z * scale);
+    clonedScene.scale.set(scale, scale, scale);
+    
+    return <primitive object={clonedScene} />;
 }
 
 // Preload models
@@ -278,7 +289,7 @@ function getModelPath(crown: string, abutment: string): string {
         combo => combo.crown === crown && combo.abutment === abutment
     );
     
-    return shouldShowOneGlb ? "/3d-model/1.glb" : "/3d-model/test.glb";
+    return shouldShowOneGlb ? "/3d-model/test.glb" : "/3d-model/test.glb";
 }
 
 export default function ProductDetailPage({
@@ -303,10 +314,12 @@ export default function ProductDetailPage({
     
     // Fix hydration issues by ensuring client-side only rendering for interactive elements
     const [isClient, setIsClient] = useState(false);
+    const [modelError, setModelError] = useState(false);
 
     // Update model path when selections change
     useEffect(() => {
         setModelPath(getModelPath(selectedCrown, selectedAbutment));
+        setModelError(false); // Reset error on model change
     }, [selectedCrown, selectedAbutment]);
 
     // Set isClient to true after hydration
@@ -335,20 +348,70 @@ export default function ProductDetailPage({
                     {/* LEFT COLUMN - 3D Model and Controls */}
                     <div className="space-y-6">
 
-                        {/* 3D MODEL - More zoomed out */}
-                        <div className="bg-gray-50 rounded-3xl h-[500px] border overflow-hidden">
-                            {isClient && (
-                                <Canvas 
+                        {/* 3D MODEL - Fixed positioning and lighting */}
+                        <div className="bg-gray-50 rounded-3xl h-[500px] border overflow-hidden relative">
+                            {isClient && !modelError && (
+                                <Canvas
                                     camera={{ 
-                                        position: [0, 2, 20], // 👈 Further camera distance
-                                        fov: 40                 // 👈 Slightly narrower FOV for better framing
+                                        position: [3, 2, 5],
+                                        fov: 45,
+                                        near: 0.1,
+                                        far: 1000
+                                    }}
+                                    onError={(e) => {
+                                        console.error('Canvas error:', e);
+                                        setModelError(true);
                                     }}
                                 >
-                                    <ambientLight intensity={1.2} />
-                                    <directionalLight position={[5, 5, 5]} intensity={1} />
-                                    <directionalLight position={[-5, 2, 5]} intensity={0.5} />
+                                    {/* Enhanced lighting setup */}
+                                    <ambientLight intensity={0.8} />
                                     
-                                    <Suspense fallback={null}>
+                                    {/* Key lights */}
+                                    <directionalLight
+                                        position={[5, 5, 5]}
+                                        intensity={1.5}
+                                        castShadow
+                                        shadow-mapSize-width={1024}
+                                        shadow-mapSize-height={1024}
+                                    />
+                                    <directionalLight
+                                        position={[-5, 3, 5]}
+                                        intensity={1.2}
+                                    />
+                                    
+                                    {/* Fill lights */}
+                                    <directionalLight
+                                        position={[0, 5, -5]}
+                                        intensity={0.8}
+                                    />
+                                    <directionalLight
+                                        position={[0, 10, 0]}
+                                        intensity={0.5}
+                                    />
+                                    
+                                    {/* Back light for rim lighting */}
+                                    <directionalLight
+                                        position={[0, 2, -10]}
+                                        intensity={0.6}
+                                    />
+                                    
+                                    {/* Point lights for local highlights */}
+                                    <pointLight position={[2, 3, 2]} intensity={0.5} />
+                                    <pointLight position={[-2, 2, 2]} intensity={0.5} />
+                                    
+                                    {/* Environment reflection */}
+                                    <hemisphereLight
+                                        color="#ffffff"
+                                        groundColor="#444444"
+                                        intensity={0.6}
+                                    />
+                                    
+                                    <Suspense fallback={
+                                        <mesh>
+                                            <boxGeometry args={[1, 1, 1]} />
+                                            <meshStandardMaterial color="#666666" />
+                                        </mesh>
+                                    }>
                                         <Center>
                                             <Model url={modelPath} />
                                         </Center>
@@ -357,23 +420,43 @@ export default function ProductDetailPage({
                                     <OrbitControls
                                         enableZoom
                                         enablePan
-                                        minDistance={12}  // 👈 Increased minimum distance
-                                        maxDistance={30}  // 👈 Increased maximum distance
+                                        enableRotate
+                                        minDistance={2}
+                                        maxDistance={10}
                                         autoRotate={true}
                                         autoRotateSpeed={1.5}
+                                        rotateSpeed={0.8}
+                                        zoomSpeed={1.2}
+                                        panSpeed={0.8}
                                     />
                                 </Canvas>
                             )}
+                            {isClient && modelError && (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                    <div className="text-center">
+                                        <p className="text-red-500 mb-2">Error loading 3D model</p>
+                                        <button 
+                                            onClick={() => setModelError(false)}
+                                            className="px-4 py-2 bg-black text-white rounded-lg text-sm"
+                                        >
+                                            Retry
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                             {!isClient && (
                                 <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                                    <div className="text-gray-400">Loading 3D model...</div>
+                                    <div className="text-center">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                                        <p className="text-gray-600">Loading 3D model...</p>
+                                    </div>
                                 </div>
                             )}
                         </div>
 
                         {/* CROWN BUTTONS */}
                         <div>
-                            <h3 className="font-semibold mb-3 text-gray-700">Crown Material</h3>
+                            <h3 className="font-semibold mb-3 text-gray-700">Crown</h3>
                             <div className="flex gap-2 flex-wrap">
                                 {["Zirconia", "LISI", "PFM"].map((item) => (
                                     <button
@@ -393,7 +476,7 @@ export default function ProductDetailPage({
 
                         {/* ABUTMENT BUTTONS */}
                         <div>
-                            <h3 className="font-semibold mb-3 text-gray-700">Abutment Material</h3>
+                            <h3 className="font-semibold mb-3 text-gray-700">Abutment</h3>
                             <div className="flex gap-2 flex-wrap">
                                 {["Titanium", "Zirconia", "Anodised"].map((item) => (
                                     <button
@@ -415,9 +498,6 @@ export default function ProductDetailPage({
                         {isClient && (
                             <div className="text-sm text-gray-500 mt-2">
                                 Currently viewing: {selectedCrown} crown with {selectedAbutment} abutment
-                                <span className="block text-xs text-gray-400 mt-1">
-                                    Model: {modelPath === "/3d-model/1.glb" ? "1.glb" : "test.glb"}
-                                </span>
                             </div>
                         )}
 
