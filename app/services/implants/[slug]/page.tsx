@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Navbar from "../../../../components/Navbar";
 import Footer from "../../../../components/Footer";
-import { ArrowLeft, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
 import { useGLTF, OrbitControls, Center } from "@react-three/drei";
 import { use } from "react";
@@ -22,8 +22,9 @@ function Model({ url }: { url: string }) {
     );
 }
 
-// Preload single model
+// Preload models
 useGLTF.preload("/3d-model/1.glb");
+useGLTF.preload("/3d-model/test.glb");
 
 // Product Data
 const productData = {
@@ -46,23 +47,38 @@ Both components are fully CE- and UKCA-marked with complete batch traceability.`
             "Biocompatible, stable and fully traceable",
         ],
 
-        aesthetic: `Enhanced Aesthetic Version
-
-For high-visibility anterior implant cases, we offer a cut-back Fusion-Zirconia crown bonded to the custom abutment, finished with a micro-layered feldspathic-enriched ceramic on the labial surface. This option enhances optical depth, translucency and natural characterisation while maintaining the strength of the zirconia core.
-
-Why Choose the Cut-Back Option
-
-This option replicates the subtle optical behaviour of natural anterior teeth, making it the preferred choice for demanding aesthetic implant restorations.`,
-
-        aestheticBenefits: [
-            "Increased vitality and enamel-like light refraction",
-            "More natural surface texture and internal character",
-            "Superior blending with adjacent natural teeth",
-            "Ideal for single centrals and aesthetic-critical implant sites",
-            "Maintains zirconia strength while elevating ceramic beauty",
-        ],
+        aesthetic: {
+            title: "Enhanced Aesthetic Version",
+            description: "For high-visibility anterior implant cases, we offer a cut-back Fusion-Zirconia crown bonded to the custom abutment, finished with a micro-layered feldspathic-enriched ceramic on the labial surface. This option enhances optical depth, translucency and natural characterisation while maintaining the strength of the zirconia core.",
+            whyChooseTitle: "Why Choose the Cut-Back Option",
+            benefits: [
+                "Increased vitality and enamel-like light refraction",
+                "More natural surface texture and internal character",
+                "Superior blending with adjacent natural teeth",
+                "Ideal for single centrals and aesthetic-critical implant sites",
+                "Maintains zirconia strength while elevating ceramic beauty",
+            ],
+            conclusion: "This option replicates the subtle optical behaviour of natural anterior teeth, making it the preferred choice for demanding aesthetic implant restorations."
+        },
     },
 };
+
+// Function to get model path based on selections
+function getModelPath(crown: string, abutment: string): string {
+    // Combinations that show 1.glb
+    const showOneGlb = [
+        { crown: "Zirconia", abutment: "Titanium" },
+        { crown: "Zirconia", abutment: "Zirconia" },
+        { crown: "LISI", abutment: "Anodised" }
+    ];
+    
+    // Check if current combination should show 1.glb
+    const shouldShowOneGlb = showOneGlb.some(
+        combo => combo.crown === crown && combo.abutment === abutment
+    );
+    
+    return shouldShowOneGlb ? "/3d-model/1.glb" : "/3d-model/test.glb";
+}
 
 export default function ProductDetailPage({
     params,
@@ -81,11 +97,16 @@ export default function ProductDetailPage({
     const [selectedCrown, setSelectedCrown] = useState("Zirconia");
     const [selectedAbutment, setSelectedAbutment] = useState("Titanium");
     
-    // Use single model for now
-    const modelPath = "/3d-model/1.glb";
+    // Get model path based on selections
+    const [modelPath, setModelPath] = useState("/3d-model/1.glb");
     
     // Fix hydration issues by ensuring client-side only rendering for interactive elements
     const [isClient, setIsClient] = useState(false);
+
+    // Update model path when selections change
+    useEffect(() => {
+        setModelPath(getModelPath(selectedCrown, selectedAbutment));
+    }, [selectedCrown, selectedAbutment]);
 
     // Set isClient to true after hydration
     useEffect(() => {
@@ -151,7 +172,7 @@ export default function ProductDetailPage({
 
                         {/* CROWN BUTTONS */}
                         <div>
-                            <h3 className="font-semibold mb-3 text-gray-700">Crown Material</h3>
+                            <h3 className="font-semibold mb-3 text-gray-700">Crown</h3>
                             <div className="flex gap-2 flex-wrap">
                                 {["Zirconia", "LISI", "PFM"].map((item) => (
                                     <button
@@ -171,7 +192,7 @@ export default function ProductDetailPage({
 
                         {/* ABUTMENT BUTTONS */}
                         <div>
-                            <h3 className="font-semibold mb-3 text-gray-700">Abutment Material</h3>
+                            <h3 className="font-semibold mb-3 text-gray-700">Abutment</h3>
                             <div className="flex gap-2 flex-wrap">
                                 {["Titanium", "Zirconia", "Anodised"].map((item) => (
                                     <button
@@ -193,6 +214,9 @@ export default function ProductDetailPage({
                         {isClient && (
                             <div className="text-sm text-gray-500 mt-2">
                                 Currently viewing: {selectedCrown} crown with {selectedAbutment} abutment
+                                <span className="block text-xs text-gray-400 mt-1">
+                                    Model: {modelPath === "/3d-model/1.glb" ? "1.glb" : "test.glb"}
+                                </span>
                             </div>
                         )}
 
@@ -244,7 +268,7 @@ export default function ProductDetailPage({
                                     <ul className="space-y-3">
                                         {product.benefits.map((b, i) => (
                                             <li key={i} className="flex gap-3 text-gray-600">
-                                                <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-green-600" />
+                                                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-2.5 flex-shrink-0"></span>
                                                 <span>{b}</span>
                                             </li>
                                         ))}
@@ -264,21 +288,31 @@ export default function ProductDetailPage({
                             </button>
                             {open === "aes" && (
                                 <div className="p-4 border-t space-y-4">
-                                    <p className="text-gray-600 whitespace-pre-line leading-relaxed">
-                                        {product.aesthetic}
+                                    {/* Title */}
+                                    <p className="font-semibold text-gray-800">{product.aesthetic.title}</p>
+                                    
+                                    {/* Description */}
+                                    <p className="text-gray-600 leading-relaxed">
+                                        {product.aesthetic.description}
                                     </p>
 
-                                    <div>
-                                        <h4 className="font-semibold text-gray-800 mb-2">Why Choose the Cut-Back Option</h4>
-                                        <ul className="space-y-3">
-                                            {product.aestheticBenefits.map((b, i) => (
-                                                <li key={i} className="flex gap-3 text-gray-600">
-                                                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-green-600" />
-                                                    <span>{b}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
+                                    {/* Why Choose Title */}
+                                    <p className="font-semibold text-gray-800">{product.aesthetic.whyChooseTitle}</p>
+
+                                    {/* Benefits with dots */}
+                                    <ul className="space-y-3">
+                                        {product.aesthetic.benefits.map((b, i) => (
+                                            <li key={i} className="flex gap-3 text-gray-600">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-2.5 flex-shrink-0"></span>
+                                                <span>{b}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    {/* Conclusion */}
+                                    <p className="text-gray-600 leading-relaxed">
+                                        {product.aesthetic.conclusion}
+                                    </p>
                                 </div>
                             )}
                         </div>
