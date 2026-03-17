@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ================= ROOT TOKENS ================= */
+
+:root {
+  --dental-cream: #f9f8f6;
+  --dental-stone: #e5e1da;
+  --dental-forest: #2f6f4f;
+  --dental-green-light: #a2d8b2;
+  --dental-gold: #a68966;
+
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-light: #777777;
+}
+
+/* ================= BASE ================= */
+
+body {
+  background: white;
+  color: var(--text-primary);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+/* ================= COMPONENT LAYER ================= */
+
+@layer components {
+  .section-padding {
+    @apply py-24 md:py-40 px-6 lg:px-12;
+  }
+
+  .container-max {
+    @apply max-w-7xl mx-auto;
+  }
+
+  .badge-number {
+    @apply absolute -top-6 left-8 w-12 h-12
+           bg-brand-green text-white
+           flex items-center justify-center
+           text-xs tracking-widest font-bold
+           rounded-full shadow-md;
+  }
+
+  .glow-hover {
+    @apply absolute inset-0 opacity-0
+           group-hover:opacity-100
+           transition duration-500
+           bg-gradient-to-br from-brand-green/10 to-transparent
+           rounded-xl;
+  }
+}

@@ -1,0 +1,8 @@
+<svg width="200" height="50" viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .text { font-family: sans-serif; font-weight: 900; text-transform: uppercase; fill: #A2D8B2; }
+    </style>
+  </defs>
+  <text x="10" y="35" class="text" font-size="24">3Shape</text>
+</svg>
