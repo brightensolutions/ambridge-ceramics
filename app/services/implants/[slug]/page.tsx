@@ -26,17 +26,17 @@ function Model({ url }: { url: string }) {
 useGLTF.preload("/3d-model/1.glb");
 useGLTF.preload("/3d-model/test.glb");
 
-// Product Data
-const productData = {
+// Product Data for all implant products with exact names
+const productData: { [key: string]: any } = {
+    // Screw Retained Products
     "anterior-crown-screw": {
-        name: "Anterior Screw-Retained Implant Crown & Bridge — Fusion-Zirconia (Screwmentable)",
-
-        description: `A digitally designed anterior implant restoration combining our exclusive Fusion-Zirconia crown or bridge with a precision-milled CAD/CAM titanium custom abutment. The abutment is laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained “screwmentable” design provides the aesthetic benefits of a cemented crown with the retrievability and clinical control of a screw-retained solution.`,
-
+        name: "Anterior Crown",
+        category: "Screw retained",
+        fullName: "Anterior Screw-Retained Implant Crown",
+        description: `A digitally designed anterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained “screwmentable” design provides the aesthetic benefits of a cemented crown with the retrievability and clinical control of a screw-retained solution.`,
         material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  
 Custom Titanium Abutment — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  
 Both components are fully CE- and UKCA-marked with complete batch traceability.`,
-
         benefits: [
             "Screw-retained design for full clinical retrievability",
             "Gold-anodised titanium abutment for warm soft-tissue aesthetics",
@@ -46,7 +46,6 @@ Both components are fully CE- and UKCA-marked with complete batch traceability.`
             "Reduced risk of residual cement complications",
             "Biocompatible, stable and fully traceable",
         ],
-
         aesthetic: {
             title: "Enhanced Aesthetic Version",
             description: "For high-visibility anterior implant cases, we offer a cut-back Fusion-Zirconia crown bonded to the custom abutment, finished with a micro-layered feldspathic-enriched ceramic on the labial surface. This option enhances optical depth, translucency and natural characterisation while maintaining the strength of the zirconia core.",
@@ -59,6 +58,208 @@ Both components are fully CE- and UKCA-marked with complete batch traceability.`
                 "Maintains zirconia strength while elevating ceramic beauty",
             ],
             conclusion: "This option replicates the subtle optical behaviour of natural anterior teeth, making it the preferred choice for demanding aesthetic implant restorations."
+        },
+    },
+    "posterior-crown-screw": {
+        name: "Posterior Crown",
+        category: "Screw retained",
+        fullName: "Posterior Screw-Retained Implant Crown",
+        description: `A digitally designed posterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained “screwmentable” design provides the aesthetic benefits of a cemented crown with the retrievability and clinical control of a screw-retained solution.`,
+        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  
+Custom Titanium Abutment — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  
+Both components are fully CE- and UKCA-marked with complete batch traceability.`,
+        benefits: [
+            "Screw-retained design for full clinical retrievability",
+            "Gold-anodised titanium abutment for warm soft-tissue aesthetics",
+            "Optimised emergence profile for stable peri-implant tissue support",
+            "Fusion-Zirconia crown for natural translucency and long-term strength",
+            "Excellent marginal accuracy through CAD/CAM design",
+            "Reduced risk of residual cement complications",
+            "Biocompatible, stable and fully traceable",
+        ],
+        aesthetic: {
+            title: "Enhanced Aesthetic Version",
+            description: "For high-visibility posterior implant cases, we offer a cut-back Fusion-Zirconia crown bonded to the custom abutment, finished with a micro-layered feldspathic-enriched ceramic on the visible surfaces. This option enhances optical depth and natural characterisation while maintaining the strength of the zirconia core.",
+            whyChooseTitle: "Why Choose the Cut-Back Option",
+            benefits: [
+                "Increased vitality and enamel-like light refraction",
+                "More natural surface texture and internal character",
+                "Superior blending with adjacent natural teeth",
+                "Ideal for aesthetic-critical posterior sites",
+                "Maintains zirconia strength while elevating ceramic beauty",
+            ],
+            conclusion: "This option replicates the subtle optical behaviour of natural teeth, making it the preferred choice for demanding aesthetic restorations."
+        },
+    },
+    "anterior-3-unit-bridge-screw": {
+        name: "Anterior 3 Unit Bridge",
+        category: "Screw retained",
+        fullName: "Anterior Screw-Retained 3 Unit Bridge",
+        description: `A digitally designed anterior 3-unit implant bridge combining our exclusive Fusion-Zirconia bridge with precision-milled CAD/CAM titanium custom abutments. The abutments are laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained “screwmentable” design provides the aesthetic benefits of a cemented bridge with the retrievability and clinical control of a screw-retained solution.`,
+        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  
+Custom Titanium Abutments — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  
+Both components are fully CE- and UKCA-marked with complete batch traceability.`,
+        benefits: [
+            "Screw-retained design for full clinical retrievability",
+            "Gold-anodised titanium abutments for warm soft-tissue aesthetics",
+            "Optimised emergence profile for stable peri-implant tissue support",
+            "Fusion-Zirconia bridge for natural translucency and long-term strength",
+            "Excellent marginal accuracy through CAD/CAM design",
+            "Reduced risk of residual cement complications",
+            "Biocompatible, stable and fully traceable",
+        ],
+        aesthetic: {
+            title: "Enhanced Aesthetic Version",
+            description: "For high-visibility anterior implant cases, we offer a cut-back Fusion-Zirconia bridge bonded to the custom abutments, finished with micro-layered feldspathic-enriched ceramic on the labial surfaces. This option enhances optical depth, translucency and natural characterisation while maintaining the strength of the zirconia core.",
+            whyChooseTitle: "Why Choose the Cut-Back Option",
+            benefits: [
+                "Increased vitality and enamel-like light refraction",
+                "More natural surface texture and internal character",
+                "Superior blending with adjacent natural teeth",
+                "Ideal for single centrals and aesthetic-critical implant sites",
+                "Maintains zirconia strength while elevating ceramic beauty",
+            ],
+            conclusion: "This option replicates the subtle optical behaviour of natural anterior teeth, making it the preferred choice for demanding aesthetic implant restorations."
+        },
+    },
+    "posterior-3-unit-bridge-screw": {
+        name: "Posterior 3 Unit Bridge",
+        category: "Screw retained",
+        fullName: "Posterior Screw-Retained 3 Unit Bridge",
+        description: `A digitally designed posterior 3-unit implant bridge combining our exclusive Fusion-Zirconia bridge with precision-milled CAD/CAM titanium custom abutments. The abutments are laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained “screwmentable” design provides the aesthetic benefits of a cemented bridge with the retrievability and clinical control of a screw-retained solution.`,
+        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  
+Custom Titanium Abutments — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  
+Both components are fully CE- and UKCA-marked with complete batch traceability.`,
+        benefits: [
+            "Screw-retained design for full clinical retrievability",
+            "Gold-anodised titanium abutments for warm soft-tissue aesthetics",
+            "Optimised emergence profile for stable peri-implant tissue support",
+            "Fusion-Zirconia bridge for natural translucency and long-term strength",
+            "Excellent marginal accuracy through CAD/CAM design",
+            "Reduced risk of residual cement complications",
+            "Biocompatible, stable and fully traceable",
+        ],
+        aesthetic: {
+            title: "Enhanced Aesthetic Version",
+            description: "For high-visibility posterior implant cases, we offer a cut-back Fusion-Zirconia bridge bonded to the custom abutments, finished with micro-layered feldspathic-enriched ceramic on the visible surfaces. This option enhances optical depth and natural characterisation while maintaining the strength of the zirconia core.",
+            whyChooseTitle: "Why Choose the Cut-Back Option",
+            benefits: [
+                "Increased vitality and enamel-like light refraction",
+                "More natural surface texture and internal character",
+                "Superior blending with adjacent natural teeth",
+                "Ideal for aesthetic-critical posterior sites",
+                "Maintains zirconia strength while elevating ceramic beauty",
+            ],
+            conclusion: "This option replicates the subtle optical behaviour of natural teeth, making it the preferred choice for demanding aesthetic restorations."
+        },
+    },
+    
+    // Cement Retained Products
+    "anterior-crown-cement": {
+        name: "Anterior Crown",
+        category: "Cement retained",
+        fullName: "Anterior Cement-Retained Implant Crown",
+        description: `A digitally designed anterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is designed for cement retention, providing excellent marginal fit and aesthetic outcomes.`,
+        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  
+Custom Titanium Abutment — CAD/CAM-milled Grade 5 titanium for optimal fit and biocompatibility.  
+Both components are fully CE- and UKCA-marked with complete batch traceability.`,
+        benefits: [
+            "Cement-retained design for passive fit",
+            "Excellent marginal accuracy through CAD/CAM design",
+            "Fusion-Zirconia crown for natural translucency and long-term strength",
+            "Custom abutment for optimal emergence profile",
+            "Ideal for limited interarch space cases",
+            "Predictable aesthetic outcomes",
+            "Biocompatible, stable and fully traceable",
+        ],
+        aesthetic: {
+            title: "Enhanced Aesthetic Version",
+            description: "For high-visibility anterior implant cases, we offer a cut-back Fusion-Zirconia crown bonded to the custom abutment, finished with a micro-layered feldspathic-enriched ceramic on the labial surface.",
+            whyChooseTitle: "Why Choose the Cut-Back Option",
+            benefits: [
+                "Increased vitality and enamel-like light refraction",
+                "More natural surface texture and internal character",
+                "Superior blending with adjacent natural teeth",
+                "Ideal for single centrals and aesthetic-critical implant sites",
+                "Maintains zirconia strength while elevating ceramic beauty",
+            ],
+            conclusion: "This option replicates the subtle optical behaviour of natural anterior teeth."
+        },
+    },
+    "posterior-crown-cement": {
+        name: "Posterior Crown",
+        category: "Cement retained",
+        fullName: "Posterior Cement-Retained Implant Crown",
+        description: `A digitally designed posterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is designed for cement retention, providing excellent marginal fit and durability.`,
+        material: `Fusion-Zirconia — a multilayer zirconia with high flexural strength.  
+Custom Titanium Abutment — CAD/CAM-milled Grade 5 titanium.  
+Both components are fully CE- and UKCA-marked with complete batch traceability.`,
+        benefits: [
+            "Cement-retained design for passive fit",
+            "Excellent marginal accuracy",
+            "Fusion-Zirconia crown for long-term strength",
+            "Custom abutment for optimal fit",
+            "Biocompatible and fully traceable",
+        ],
+        aesthetic: {
+            title: "Enhanced Aesthetic Version",
+            description: "For aesthetic-critical posterior cases, we offer enhanced ceramic layering on visible surfaces.",
+            whyChooseTitle: "Why Choose the Enhanced Option",
+            benefits: [
+                "More natural surface texture",
+                "Superior blending with adjacent teeth",
+                "Maintains core strength",
+            ],
+            conclusion: "Ideal for demanding aesthetic requirements."
+        },
+    },
+    "anterior-3-unit-bridge-cement": {
+        name: "Anterior 3 Unit Bridge",
+        category: "Cement retained",
+        fullName: "Anterior Cement-Retained 3 Unit Bridge",
+        description: `A digitally designed anterior 3-unit implant bridge combining our exclusive Fusion-Zirconia bridge with precision-milled CAD/CAM titanium custom abutments. Designed for cement retention with optimal aesthetics.`,
+        material: `Fusion-Zirconia bridge with custom titanium abutments. Both components are fully CE- and UKCA-marked.`,
+        benefits: [
+            "Cement-retained design",
+            "Excellent marginal accuracy",
+            "Fusion-Zirconia for natural aesthetics",
+            "Custom abutments for optimal fit",
+            "Biocompatible and traceable",
+        ],
+        aesthetic: {
+            title: "Enhanced Aesthetic Version",
+            description: "Enhanced ceramic layering for anterior aesthetics.",
+            whyChooseTitle: "Why Choose the Enhanced Option",
+            benefits: [
+                "Increased vitality",
+                "Natural surface texture",
+                "Superior blending",
+            ],
+            conclusion: "Ideal for demanding aesthetic cases."
+        },
+    },
+    "posterior-3-unit-bridge-cement": {
+        name: "Posterior 3 Unit Bridge",
+        category: "Cement retained",
+        fullName: "Posterior Cement-Retained 3 Unit Bridge",
+        description: `A digitally designed posterior 3-unit implant bridge combining our exclusive Fusion-Zirconia bridge with precision-milled CAD/CAM titanium custom abutments. Designed for cement retention with optimal strength.`,
+        material: `Fusion-Zirconia bridge with custom titanium abutments. Fully CE- and UKCA-marked.`,
+        benefits: [
+            "Cement-retained design",
+            "Excellent marginal accuracy",
+            "High-strength Fusion-Zirconia",
+            "Custom abutments",
+            "Biocompatible",
+        ],
+        aesthetic: {
+            title: "Enhanced Aesthetic Version",
+            description: "Enhanced ceramic layering for visible surfaces.",
+            whyChooseTitle: "Why Choose the Enhanced Option",
+            benefits: [
+                "Natural surface texture",
+                "Superior blending",
+            ],
+            conclusion: "Ideal for aesthetic requirements."
         },
     },
 };
@@ -86,7 +287,7 @@ export default function ProductDetailPage({
     params: Promise<{ slug: string }>;
 }) {
     const { slug } = use(params);
-    const product = productData[slug as keyof typeof productData];
+    const product = productData[slug];
 
     const [open, setOpen] = useState<string | null>(null); // No accordion open by default
     const toggle = (section: string) => {
@@ -172,7 +373,7 @@ export default function ProductDetailPage({
 
                         {/* CROWN BUTTONS */}
                         <div>
-                            <h3 className="font-semibold mb-3 text-gray-700">Crown</h3>
+                            <h3 className="font-semibold mb-3 text-gray-700">Crown Material</h3>
                             <div className="flex gap-2 flex-wrap">
                                 {["Zirconia", "LISI", "PFM"].map((item) => (
                                     <button
@@ -192,7 +393,7 @@ export default function ProductDetailPage({
 
                         {/* ABUTMENT BUTTONS */}
                         <div>
-                            <h3 className="font-semibold mb-3 text-gray-700">Abutment</h3>
+                            <h3 className="font-semibold mb-3 text-gray-700">Abutment Material</h3>
                             <div className="flex gap-2 flex-wrap">
                                 {["Titanium", "Zirconia", "Anodised"].map((item) => (
                                     <button
@@ -224,10 +425,13 @@ export default function ProductDetailPage({
 
                     {/* RIGHT COLUMN - Product Information */}
                     <div className="space-y-6">
-                        {/* Product Name - Sentence case */}
-                        <h1 className="text-2xl font-bold text-gray-800 leading-tight">
-                            {product.name}
-                        </h1>
+                        {/* Category and Product Name */}
+                        <div>
+                            <span className="text-sm text-gray-500 uppercase tracking-wider">{product.category}</span>
+                            <h1 className="text-3xl font-bold text-gray-800 leading-tight mt-1">
+                                {product.name}
+                            </h1>
+                        </div>
 
                         {/* Description - Always visible, not in accordion */}
                         <div className="prose prose-gray max-w-none">
@@ -266,7 +470,7 @@ export default function ProductDetailPage({
                             {open === "ben" && (
                                 <div className="p-4 border-t">
                                     <ul className="space-y-3">
-                                        {product.benefits.map((b, i) => (
+                                        {product.benefits.map((b: string, i: number) => (
                                             <li key={i} className="flex gap-3 text-gray-600">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-2.5 flex-shrink-0"></span>
                                                 <span>{b}</span>
@@ -301,7 +505,7 @@ export default function ProductDetailPage({
 
                                     {/* Benefits with dots */}
                                     <ul className="space-y-3">
-                                        {product.aesthetic.benefits.map((b, i) => (
+                                        {product.aesthetic.benefits.map((b: string, i: number) => (
                                             <li key={i} className="flex gap-3 text-gray-600">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-2.5 flex-shrink-0"></span>
                                                 <span>{b}</span>
