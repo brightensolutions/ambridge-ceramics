@@ -13,7 +13,7 @@ import * as THREE from 'three';
 function Model({ url, crownType, abutmentType }: { url: string, crownType: string, abutmentType: string }) {
     const { scene } = useGLTF(url);
     
-    // 1. Dynamic Abutment Material (Returns null if Titanium so we can use original)
+    // 1. Dynamic Abutment Material (Returns null if Titanium so we perfectly use the original GLB silver)
     const abutmentMaterial = useMemo(() => {
         if (abutmentType === "Anodised") {
             return new THREE.MeshStandardMaterial({
@@ -31,11 +31,11 @@ function Model({ url, crownType, abutmentType }: { url: string, crownType: strin
                 envMapIntensity: 0.8
             });
         }
-        // Return null for Titanium so we know to fetch the original GLB material
+        // Return null for Titanium so we fetch the original GLB material directly
         return null; 
     }, [abutmentType]);
 
-    // 2. Dynamic Crown Material (Returns null if Zirconia so we can use original)
+    // 2. Dynamic Crown Material (Returns null if Zirconia so we use original)
     const crownMaterial = useMemo(() => {
         if (crownType === "LISI") {
             return new THREE.MeshPhysicalMaterial({
@@ -47,7 +47,7 @@ function Model({ url, crownType, abutmentType }: { url: string, crownType: strin
                 envMapIntensity: 1.0,
                 clearcoat: 1.0,
                 clearcoatRoughness: 0.1,
-                side: THREE.FrontSide 
+                side: THREE.FrontSide // Stops internal light trapping when zoomed in
             });
         }
         if (crownType === "PFM") {
@@ -56,10 +56,10 @@ function Model({ url, crownType, abutmentType }: { url: string, crownType: strin
                 metalness: 0.0,
                 roughness: 0.3,
                 envMapIntensity: 0.8,
-                side: THREE.FrontSide
+                side: THREE.FrontSide // Stops internal light trapping when zoomed in
             });
         }
-        // Return null for Zirconia so we know to fetch the original GLB material
+        // Return null for Zirconia so we fetch the original GLB material directly
         return null; 
     }, [crownType]);
 
@@ -417,6 +417,16 @@ export default function ProductDetailPage({
                     Back to Implants
                 </Link>
 
+                {/* MOBILE HEADER (Visible only on mobile/tablet, hidden on desktop) */}
+                <div className="lg:hidden mb-8">
+                    <span className="inline-block text-sm font-bold uppercase tracking-widest text-[#7ab88a] bg-[#a2d8b2]/20 px-3 py-1 rounded-full mb-3">
+                        {product.category}
+                    </span>
+                    <h1 className="text-4xl font-extrabold text-gray-900 leading-tight tracking-tight">
+                        {product.name}
+                    </h1>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
 
                     {/* LEFT COLUMN - 3D Model and Controls */}
@@ -452,8 +462,12 @@ export default function ProductDetailPage({
                                 </div>
                             )}
 
+                            {/* CANVAS - Increased Brightness via ToneMapping & Additional Lighting */}
                             {isClient && !modelError && (
                                 <Canvas
+                                    gl={{ 
+                                        toneMappingExposure: 0.95 // INCREASED: Makes the whole model slightly brighter and punchier
+                                    }}
                                     camera={{ 
                                         position: [5, 3, 5],
                                         fov: 40,
@@ -466,6 +480,10 @@ export default function ProductDetailPage({
                                     }}
                                 >
                                     <Suspense fallback={null}>
+                                        {/* INCREASED: Brighter ambient base + soft front light */}
+                                        <ambientLight intensity={0.75} />
+                                        <directionalLight position={[0, 5, 5]} intensity={0.4} color="#ffffff" />
+
                                         <Environment preset="city" />
                                         
                                         <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
@@ -530,7 +548,7 @@ export default function ProductDetailPage({
                                         <button
                                             key={item}
                                             onClick={() => setSelectedCrown(item)}
-                                            className={`px-5 py-2.5 rounded-full border transition-all duration-300 font-medium ${
+                                            className={`px-4 py-2.5 rounded-full border transition-all duration-300 font-medium ${
                                                 selectedCrown === item
                                                     ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
                                                     : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
@@ -550,7 +568,7 @@ export default function ProductDetailPage({
                                         <button
                                             key={item}
                                             onClick={() => setSelectedAbutment(item)}
-                                            className={`px-5 py-2.5 rounded-full border transition-all duration-300 font-medium ${
+                                            className={`px-4 py-2.5 rounded-full border transition-all duration-300 font-medium ${
                                                 selectedAbutment === item
                                                     ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
                                                     : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
@@ -568,8 +586,8 @@ export default function ProductDetailPage({
                     {/* RIGHT COLUMN - Product Information */}
                     <div className="space-y-6">
                         
-                        {/* Headers */}
-                        <div>
+                        {/* DESKTOP HEADER (Hidden on mobile) */}
+                        <div className="hidden lg:block">
                             <span className="text-sm font-bold uppercase tracking-widest text-[#7ab88a] bg-[#a2d8b2]/20 px-3 py-1 rounded-full">
                                 {product.category}
                             </span>
