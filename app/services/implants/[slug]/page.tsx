@@ -3,51 +3,131 @@
 import Link from "next/link";
 import Navbar from "../../../../components/Navbar";
 import Footer from "../../../../components/Footer";
-import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
-import { useGLTF, OrbitControls, Center, Bounds } from "@react-three/drei";
-import { use } from "react";
-import { useState, Suspense, useEffect } from "react";
+import { useGLTF, OrbitControls, Center, Environment, ContactShadows, Float } from "@react-three/drei";
+import { use, useState, Suspense, useEffect, useMemo } from "react";
 import * as THREE from 'three';
 
-// ✅ Model Component with proper scaling and positioning
-function Model({ url }: { url: string }) {
+// ✅ Dynamic Model Component with realistic materials
+function Model({ url, crownType, abutmentType }: { url: string, crownType: string, abutmentType: string }) {
     const { scene } = useGLTF(url);
     
-    // Clone the scene to allow for independent modifications
-    const clonedScene = scene.clone();
-    
-    // Center and scale the model properly
-    const box = new THREE.Box3().setFromObject(clonedScene);
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    
-    // Calculate scale to fit in view (max dimension around 5 units)
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const scale = 4 / maxDim; // Scale to fit nicely in view
-    
-    // Position to center and lift slightly
-    clonedScene.position.set(-center.x * scale, -center.y * scale + 1, -center.z * scale);
-    clonedScene.scale.set(scale, scale, scale);
+    // 1. Dynamic Abutment Material
+    const abutmentMaterial = useMemo(() => {
+        if (abutmentType === "Anodised") {
+            return new THREE.MeshStandardMaterial({
+                color: new THREE.Color('#ffcc00'), // Warm Gold
+                metalness: 1.0,
+                roughness: 0.2,
+                envMapIntensity: 1.5
+            });
+        }
+        if (abutmentType === "Zirconia") {
+            return new THREE.MeshStandardMaterial({
+                color: new THREE.Color('#fdfbf7'), // White/Opaque
+                metalness: 0.0,
+                roughness: 0.2,
+                envMapIntensity: 0.5
+            });
+        }
+        // Default to Titanium (Silver)
+        return new THREE.MeshStandardMaterial({
+            color: new THREE.Color('#ffffff'), 
+            metalness: 1.0,
+            roughness: 0.15,
+            envMapIntensity: 1.5
+        });
+    }, [abutmentType]);
+
+    // 2. Dynamic Crown Material
+    const crownMaterial = useMemo(() => {
+        if (crownType === "LISI") {
+            return new THREE.MeshPhysicalMaterial({
+                color: new THREE.Color('#ffffff'),
+                metalness: 0.0,
+                roughness: 0.05,
+                transmission: 0.8,
+                thickness: 2.0,
+                envMapIntensity: 1.2,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1
+            });
+        }
+        if (crownType === "PFM") {
+            return new THREE.MeshStandardMaterial({
+                color: new THREE.Color('#f3eee6'),
+                metalness: 0.0,
+                roughness: 0.3,
+                envMapIntensity: 0.8
+            });
+        }
+        return new THREE.MeshPhysicalMaterial({
+            color: new THREE.Color('#fdfbf7'), 
+            metalness: 0.0,
+            roughness: 0.2,
+            transmission: 0.2, 
+            thickness: 1.5,
+            envMapIntensity: 0.8
+        });
+    }, [crownType]);
+
+    // 3. Apply Materials to the cloned scene
+    const clonedScene = useMemo(() => {
+        const clone = scene.clone();
+        
+        clone.traverse((node: any) => {
+            if (node.isMesh) {
+                const nodeName = node.name.toLowerCase();
+                const materialName = node.material?.name?.toLowerCase() || '';
+                
+                const isAbutment = 
+                    nodeName.includes('abutment') || nodeName.includes('implant') || 
+                    nodeName.includes('screw') || nodeName.includes('connector') || 
+                    nodeName.includes('post') || materialName.includes('metal') || 
+                    materialName.includes('titanium') || materialName.includes('silver');
+                
+                const isCrown = 
+                    nodeName.includes('crown') || nodeName.includes('tooth') || 
+                    nodeName.includes('teeth') || nodeName.includes('zirconia') || 
+                    materialName.includes('ceramic') || materialName.includes('crown');
+
+                if (isAbutment || (node.position.y > 0 && nodeName.includes('connector'))) {
+                    node.material = abutmentMaterial;
+                } else if (isCrown) {
+                    node.material = crownMaterial;
+                }
+                
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
+
+        const box = new THREE.Box3().setFromObject(clone);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 4 / maxDim; 
+        
+        clone.position.set(-center.x * scale, -center.y * scale + 1, -center.z * scale);
+        clone.scale.set(scale, scale, scale);
+        
+        return clone;
+    }, [scene, abutmentMaterial, crownMaterial]);
     
     return <primitive object={clonedScene} />;
 }
 
-// Preload models
-useGLTF.preload("/3d-model/1.glb");
 useGLTF.preload("/3d-model/test.glb");
 
-// Product Data for all implant products with exact names
 const productData: { [key: string]: any } = {
-    // Screw Retained Products
     "anterior-crown-screw": {
         name: "Anterior Crown",
         category: "Screw retained",
         fullName: "Anterior Screw-Retained Implant Crown",
-        description: `A digitally designed anterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained “screwmentable” design provides the aesthetic benefits of a cemented crown with the retrievability and clinical control of a screw-retained solution.`,
-        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  
-Custom Titanium Abutment — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  
-Both components are fully CE- and UKCA-marked with complete batch traceability.`,
+        description: `A digitally designed anterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained "screwmentable" design provides the aesthetic benefits of a cemented crown with the retrievability and clinical control of a screw-retained solution.`,
+        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  \nCustom Titanium Abutment — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  \nBoth components are fully CE- and UKCA-marked with complete batch traceability.`,
         benefits: [
             "Screw-retained design for full clinical retrievability",
             "Gold-anodised titanium abutment for warm soft-tissue aesthetics",
@@ -75,10 +155,8 @@ Both components are fully CE- and UKCA-marked with complete batch traceability.`
         name: "Posterior Crown",
         category: "Screw retained",
         fullName: "Posterior Screw-Retained Implant Crown",
-        description: `A digitally designed posterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained “screwmentable” design provides the aesthetic benefits of a cemented crown with the retrievability and clinical control of a screw-retained solution.`,
-        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  
-Custom Titanium Abutment — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  
-Both components are fully CE- and UKCA-marked with complete batch traceability.`,
+        description: `A digitally designed posterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained "screwmentable" design provides the aesthetic benefits of a cemented crown with the retrievability and clinical control of a screw-retained solution.`,
+        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  \nCustom Titanium Abutment — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  \nBoth components are fully CE- and UKCA-marked with complete batch traceability.`,
         benefits: [
             "Screw-retained design for full clinical retrievability",
             "Gold-anodised titanium abutment for warm soft-tissue aesthetics",
@@ -106,10 +184,8 @@ Both components are fully CE- and UKCA-marked with complete batch traceability.`
         name: "Anterior 3 Unit Bridge",
         category: "Screw retained",
         fullName: "Anterior Screw-Retained 3 Unit Bridge",
-        description: `A digitally designed anterior 3-unit implant bridge combining our exclusive Fusion-Zirconia bridge with precision-milled CAD/CAM titanium custom abutments. The abutments are laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained “screwmentable” design provides the aesthetic benefits of a cemented bridge with the retrievability and clinical control of a screw-retained solution.`,
-        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  
-Custom Titanium Abutments — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  
-Both components are fully CE- and UKCA-marked with complete batch traceability.`,
+        description: `A digitally designed anterior 3-unit implant bridge combining our exclusive Fusion-Zirconia bridge with precision-milled CAD/CAM titanium custom abutments. The abutments are laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained "screwmentable" design provides the aesthetic benefits of a cemented bridge with the retrievability and clinical control of a screw-retained solution.`,
+        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  \nCustom Titanium Abutments — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  \nBoth components are fully CE- and UKCA-marked with complete batch traceability.`,
         benefits: [
             "Screw-retained design for full clinical retrievability",
             "Gold-anodised titanium abutments for warm soft-tissue aesthetics",
@@ -137,10 +213,8 @@ Both components are fully CE- and UKCA-marked with complete batch traceability.`
         name: "Posterior 3 Unit Bridge",
         category: "Screw retained",
         fullName: "Posterior Screw-Retained 3 Unit Bridge",
-        description: `A digitally designed posterior 3-unit implant bridge combining our exclusive Fusion-Zirconia bridge with precision-milled CAD/CAM titanium custom abutments. The abutments are laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained “screwmentable” design provides the aesthetic benefits of a cemented bridge with the retrievability and clinical control of a screw-retained solution.`,
-        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  
-Custom Titanium Abutments — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  
-Both components are fully CE- and UKCA-marked with complete batch traceability.`,
+        description: `A digitally designed posterior 3-unit implant bridge combining our exclusive Fusion-Zirconia bridge with precision-milled CAD/CAM titanium custom abutments. The abutments are laboratory-bonded and anodised gold to enhance soft-tissue warmth and optimise the emergence profile. This screw-retained "screwmentable" design provides the aesthetic benefits of a cemented bridge with the retrievability and clinical control of a screw-retained solution.`,
+        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  \nCustom Titanium Abutments — CAD/CAM-milled Grade 5 titanium, anodised gold for improved soft-tissue integration and enhanced aesthetic blending.  \nBoth components are fully CE- and UKCA-marked with complete batch traceability.`,
         benefits: [
             "Screw-retained design for full clinical retrievability",
             "Gold-anodised titanium abutments for warm soft-tissue aesthetics",
@@ -164,16 +238,12 @@ Both components are fully CE- and UKCA-marked with complete batch traceability.`
             conclusion: "This option replicates the subtle optical behaviour of natural teeth, making it the preferred choice for demanding aesthetic restorations."
         },
     },
-    
-    // Cement Retained Products
     "anterior-crown-cement": {
         name: "Anterior Crown",
         category: "Cement retained",
         fullName: "Anterior Cement-Retained Implant Crown",
         description: `A digitally designed anterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is designed for cement retention, providing excellent marginal fit and aesthetic outcomes.`,
-        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  
-Custom Titanium Abutment — CAD/CAM-milled Grade 5 titanium for optimal fit and biocompatibility.  
-Both components are fully CE- and UKCA-marked with complete batch traceability.`,
+        material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  \nCustom Titanium Abutment — CAD/CAM-milled Grade 5 titanium for optimal fit and biocompatibility.  \nBoth components are fully CE- and UKCA-marked with complete batch traceability.`,
         benefits: [
             "Cement-retained design for passive fit",
             "Excellent marginal accuracy through CAD/CAM design",
@@ -202,9 +272,7 @@ Both components are fully CE- and UKCA-marked with complete batch traceability.`
         category: "Cement retained",
         fullName: "Posterior Cement-Retained Implant Crown",
         description: `A digitally designed posterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is designed for cement retention, providing excellent marginal fit and durability.`,
-        material: `Fusion-Zirconia — a multilayer zirconia with high flexural strength.  
-Custom Titanium Abutment — CAD/CAM-milled Grade 5 titanium.  
-Both components are fully CE- and UKCA-marked with complete batch traceability.`,
+        material: `Fusion-Zirconia — a multilayer zirconia with high flexural strength.  \nCustom Titanium Abutment — CAD/CAM-milled Grade 5 titanium.  \nBoth components are fully CE- and UKCA-marked with complete batch traceability.`,
         benefits: [
             "Cement-retained design for passive fit",
             "Excellent marginal accuracy",
@@ -275,23 +343,6 @@ Both components are fully CE- and UKCA-marked with complete batch traceability.`
     },
 };
 
-// Function to get model path based on selections
-function getModelPath(crown: string, abutment: string): string {
-    // Combinations that show 1.glb
-    const showOneGlb = [
-        { crown: "Zirconia", abutment: "Titanium" },
-        { crown: "Zirconia", abutment: "Zirconia" },
-        { crown: "LISI", abutment: "Anodised" }
-    ];
-    
-    // Check if current combination should show 1.glb
-    const shouldShowOneGlb = showOneGlb.some(
-        combo => combo.crown === crown && combo.abutment === abutment
-    );
-    
-    return shouldShowOneGlb ? "/3d-model/test.glb" : "/3d-model/test.glb";
-}
-
 export default function ProductDetailPage({
     params,
 }: {
@@ -300,61 +351,49 @@ export default function ProductDetailPage({
     const { slug } = use(params);
     const product = productData[slug];
 
-    const [open, setOpen] = useState<string | null>(null); // No accordion open by default
+    const [open, setOpen] = useState<string | null>(null);
     const toggle = (section: string) => {
         setOpen(open === section ? null : section);
     };
 
-    // Default selections
     const [selectedCrown, setSelectedCrown] = useState("Zirconia");
     const [selectedAbutment, setSelectedAbutment] = useState("Titanium");
     
-    // Get model path based on selections
-    const [modelPath, setModelPath] = useState("/3d-model/1.glb");
-    
-    // Fix hydration issues by ensuring client-side only rendering for interactive elements
     const [isClient, setIsClient] = useState(false);
     const [modelError, setModelError] = useState(false);
 
-    // Update model path when selections change
-    useEffect(() => {
-        setModelPath(getModelPath(selectedCrown, selectedAbutment));
-        setModelError(false); // Reset error on model change
-    }, [selectedCrown, selectedAbutment]);
-
-    // Set isClient to true after hydration
     useEffect(() => {
         setIsClient(true);
     }, []);
 
-    if (!product) return <div>Product not found</div>;
+    if (!product) return <div className="p-20 text-center text-gray-500">Product not found</div>;
 
     return (
-        <main className="bg-white min-h-screen">
+        <main className="bg-white min-h-screen font-sans">
             <Navbar />
 
             <section className="pt-40 pb-20 px-6 lg:px-12 max-w-[1400px] mx-auto">
 
                 <Link
                     href="/services/implants"
-                    className="inline-flex items-center text-gray-600 mb-12 hover:text-gray-900 transition-colors"
+                    className="inline-flex items-center text-gray-500 mb-10 hover:text-[#7ab88a] transition-colors font-medium"
                 >
                     <ArrowLeft className="w-5 h-5 mr-2" />
                     Back to Implants
                 </Link>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
 
                     {/* LEFT COLUMN - 3D Model and Controls */}
                     <div className="space-y-6">
 
-                        {/* 3D MODEL - Fixed positioning and lighting */}
-                        <div className="bg-gray-50 rounded-3xl h-[500px] border overflow-hidden relative">
+                        {/* 3D MODEL WITH BEAUTIFUL GRADIENT BACKGROUND */}
+                        <div className="bg-gradient-to-b from-gray-50 to-[#a2d8b2]/20 rounded-[2rem] h-[550px] border border-[#a2d8b2]/30 overflow-hidden relative shadow-sm">
                             {isClient && !modelError && (
                                 <Canvas
                                     camera={{ 
-                                        position: [3, 2, 5],
-                                        fov: 45,
+                                        position: [5, 3, 5],
+                                        fov: 40,
                                         near: 0.1,
                                         far: 1000
                                     }}
@@ -363,58 +402,21 @@ export default function ProductDetailPage({
                                         setModelError(true);
                                     }}
                                 >
-                                    {/* Enhanced lighting setup */}
-                                    <ambientLight intensity={0.8} />
-                                    
-                                    {/* Key lights */}
-                                    <directionalLight
-                                        position={[5, 5, 5]}
-                                        intensity={1.5}
-                                        castShadow
-                                        shadow-mapSize-width={1024}
-                                        shadow-mapSize-height={1024}
-                                    />
-                                    <directionalLight
-                                        position={[-5, 3, 5]}
-                                        intensity={1.2}
-                                    />
-                                    
-                                    {/* Fill lights */}
-                                    <directionalLight
-                                        position={[0, 5, -5]}
-                                        intensity={0.8}
-                                    />
-                                    <directionalLight
-                                        position={[0, 10, 0]}
-                                        intensity={0.5}
-                                    />
-                                    
-                                    {/* Back light for rim lighting */}
-                                    <directionalLight
-                                        position={[0, 2, -10]}
-                                        intensity={0.6}
-                                    />
-                                    
-                                    {/* Point lights for local highlights */}
-                                    <pointLight position={[2, 3, 2]} intensity={0.5} />
-                                    <pointLight position={[-2, 2, 2]} intensity={0.5} />
-                                    
-                                    {/* Environment reflection */}
-                                    <hemisphereLight
-                                        color="#ffffff"
-                                        groundColor="#444444"
-                                        intensity={0.6}
-                                    />
-                                    
-                                    <Suspense fallback={
-                                        <mesh>
-                                            <boxGeometry args={[1, 1, 1]} />
-                                            <meshStandardMaterial color="#666666" />
-                                        </mesh>
-                                    }>
-                                        <Center>
-                                            <Model url={modelPath} />
-                                        </Center>
+                                    <Suspense fallback={null}>
+                                        <Environment preset="city" />
+                                        
+                                        <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
+                                            <Center>
+                                                <Model 
+                                                    url="/3d-model/test.glb" 
+                                                    crownType={selectedCrown} 
+                                                    abutmentType={selectedAbutment} 
+                                                />
+                                            </Center>
+                                        </Float>
+
+                                        {/* Tinted shadow to match the brand color slightly */}
+                                        <ContactShadows position={[0, -2, 0]} opacity={0.3} color="#6ba67e" scale={10} blur={2.5} far={4} />
                                     </Suspense>
 
                                     <OrbitControls
@@ -424,179 +426,190 @@ export default function ProductDetailPage({
                                         minDistance={2}
                                         maxDistance={10}
                                         autoRotate={true}
-                                        autoRotateSpeed={1.5}
-                                        rotateSpeed={0.8}
-                                        zoomSpeed={1.2}
-                                        panSpeed={0.8}
+                                        autoRotateSpeed={1.0}
                                     />
                                 </Canvas>
                             )}
+                            
+                            {/* Loading / Error States */}
                             {isClient && modelError && (
-                                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                <div className="w-full h-full flex items-center justify-center">
                                     <div className="text-center">
-                                        <p className="text-red-500 mb-2">Error loading 3D model</p>
+                                        <p className="text-red-400 mb-3 font-medium">Unable to load 3D model</p>
                                         <button 
                                             onClick={() => setModelError(false)}
-                                            className="px-4 py-2 bg-black text-white rounded-lg text-sm"
+                                            className="px-6 py-2 bg-[#a2d8b2] text-gray-900 font-medium rounded-full hover:bg-[#8ec29e] transition-colors shadow-sm"
                                         >
-                                            Retry
+                                            Try Again
                                         </button>
                                     </div>
                                 </div>
                             )}
                             {!isClient && (
-                                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                <div className="w-full h-full flex items-center justify-center">
                                     <div className="text-center">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-                                        <p className="text-gray-600">Loading 3D model...</p>
+                                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#a2d8b2] mx-auto mb-4"></div>
+                                        <p className="text-gray-500 font-medium tracking-wide">Initializing 3D Viewer...</p>
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* CROWN BUTTONS */}
-                        <div>
-                            <h3 className="font-semibold mb-3 text-gray-700">Crown</h3>
-                            <div className="flex gap-2 flex-wrap">
-                                {["Zirconia", "LISI", "PFM"].map((item) => (
-                                    <button
-                                        key={item}
-                                        onClick={() => setSelectedCrown(item)}
-                                        className={`px-5 py-2.5 rounded-full border transition-all duration-200 ${
-                                            selectedCrown === item
-                                                ? "bg-black text-white border-black shadow-md"
-                                                : "bg-white hover:border-gray-400"
-                                        }`}
-                                    >
-                                        {item}
-                                    </button>
-                                ))}
+                        {/* STACKED INTERACTIVE CONTROLS */}
+                        <div className="flex flex-col gap-6 bg-gray-50/50 p-6 rounded-[2rem] border border-[#a2d8b2]/20">
+                            {/* Crown Section */}
+                            <div>
+                                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3 ml-1">Crown Material</h3>
+                                <div className="flex gap-2 flex-wrap">
+                                    {["Zirconia", "LISI", "PFM"].map((item) => (
+                                        <button
+                                            key={item}
+                                            onClick={() => setSelectedCrown(item)}
+                                            className={`px-5 py-2.5 rounded-full border transition-all duration-300 font-medium ${
+                                                selectedCrown === item
+                                                    ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
+                                                    : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
+                                            }`}
+                                        >
+                                            {item}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Abutment Section */}
+                            <div>
+                                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3 ml-1">Abutment Material</h3>
+                                <div className="flex gap-2 flex-wrap">
+                                    {["Titanium", "Zirconia", "Anodised"].map((item) => (
+                                        <button
+                                            key={item}
+                                            onClick={() => setSelectedAbutment(item)}
+                                            className={`px-5 py-2.5 rounded-full border transition-all duration-300 font-medium ${
+                                                selectedAbutment === item
+                                                    ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
+                                                    : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
+                                            }`}
+                                        >
+                                            {item}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-
-                        {/* ABUTMENT BUTTONS */}
-                        <div>
-                            <h3 className="font-semibold mb-3 text-gray-700">Abutment</h3>
-                            <div className="flex gap-2 flex-wrap">
-                                {["Titanium", "Zirconia", "Anodised"].map((item) => (
-                                    <button
-                                        key={item}
-                                        onClick={() => setSelectedAbutment(item)}
-                                        className={`px-5 py-2.5 rounded-full border transition-all duration-200 ${
-                                            selectedAbutment === item
-                                                ? "bg-black text-white border-black shadow-md"
-                                                : "bg-white hover:border-gray-400"
-                                        }`}
-                                    >
-                                        {item}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Current selection indicator */}
-                        {isClient && (
-                            <div className="text-sm text-gray-500 mt-2">
-                                Currently viewing: {selectedCrown} crown with {selectedAbutment} abutment
-                            </div>
-                        )}
 
                     </div>
 
-                    {/* RIGHT COLUMN - Product Information */}
+                    {/* RIGHT COLUMN - Product Information (Aligned to Top) */}
                     <div className="space-y-6">
-                        {/* Category and Product Name */}
+                        
+                        {/* Headers */}
                         <div>
-                            <span className="text-sm text-gray-500 uppercase tracking-wider">{product.category}</span>
-                            <h1 className="text-3xl font-bold text-gray-800 leading-tight mt-1">
+                            <span className="text-sm font-bold uppercase tracking-widest text-[#7ab88a] bg-[#a2d8b2]/20 px-3 py-1 rounded-full">
+                                {product.category}
+                            </span>
+                            <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mt-5 leading-tight tracking-tight">
                                 {product.name}
                             </h1>
                         </div>
 
-                        {/* Description - Always visible, not in accordion */}
-                        <div className="prose prose-gray max-w-none">
-                            <p className="text-gray-600 leading-relaxed">
+                        {/* Description */}
+                        <div className="prose prose-lg max-w-none pb-2">
+                            <p className="text-gray-600 leading-relaxed font-light text-[1.05rem]">
                                 {product.description}
                             </p>
                         </div>
 
-                        {/* MATERIAL ACCORDION */}
-                        <div className="border rounded-xl overflow-hidden">
-                            <button 
-                                onClick={() => toggle("mat")} 
-                                className="w-full flex justify-between items-center p-4 font-semibold text-left bg-gray-50 hover:bg-gray-100 transition-colors"
-                            >
-                                <span className="text-lg">Material</span>
-                                {open === "mat" ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                            </button>
-                            {open === "mat" && (
-                                <div className="p-4 text-gray-600 border-t">
-                                    <p className="whitespace-pre-line leading-relaxed">
-                                        {product.material}
-                                    </p>
+                        {/* COMPACT BRANDED ACCORDIONS */}
+                        <div className="space-y-3">
+                            
+                            {/* MATERIAL */}
+                            <div className={`border rounded-xl overflow-hidden transition-all duration-300 ${open === 'mat' ? 'border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/20' : 'border-gray-100 shadow-sm hover:border-[#a2d8b2]/50'}`}>
+                                <button 
+                                    onClick={() => toggle("mat")} 
+                                    className={`w-full flex justify-between items-center px-4 py-3.5 text-left transition-colors ${open === 'mat' ? 'bg-[#a2d8b2]/10' : 'bg-white hover:bg-[#a2d8b2]/5'}`}
+                                >
+                                    <span className={`text-lg font-bold transition-colors ${open === 'mat' ? 'text-gray-900' : 'text-gray-800'}`}>Material Specifications</span>
+                                    <div className={`p-1.5 rounded-full transition-all duration-300 ${open === 'mat' ? 'bg-[#a2d8b2] text-gray-900 rotate-180' : 'bg-gray-50 text-gray-400'}`}>
+                                        <ChevronDown className="w-4 h-4" />
+                                    </div>
+                                </button>
+                                <div className={`grid transition-all duration-300 ease-in-out ${open === 'mat' ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                    <div className="overflow-hidden bg-white">
+                                        <div className="p-4 pt-2 text-sm text-gray-600 border-t border-[#a2d8b2]/20">
+                                            <p className="whitespace-pre-line leading-relaxed">
+                                                {product.material}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
+                            </div>
 
-                        {/* BENEFITS ACCORDION */}
-                        <div className="border rounded-xl overflow-hidden">
-                            <button 
-                                onClick={() => toggle("ben")} 
-                                className="w-full flex justify-between items-center p-4 font-semibold text-left bg-gray-50 hover:bg-gray-100 transition-colors"
-                            >
-                                <span className="text-lg">Benefits</span>
-                                {open === "ben" ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                            </button>
-                            {open === "ben" && (
-                                <div className="p-4 border-t">
-                                    <ul className="space-y-3">
-                                        {product.benefits.map((b: string, i: number) => (
-                                            <li key={i} className="flex gap-3 text-gray-600">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-2.5 flex-shrink-0"></span>
-                                                <span>{b}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
+                            {/* BENEFITS */}
+                            <div className={`border rounded-xl overflow-hidden transition-all duration-300 ${open === 'ben' ? 'border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/20' : 'border-gray-100 shadow-sm hover:border-[#a2d8b2]/50'}`}>
+                                <button 
+                                    onClick={() => toggle("ben")} 
+                                    className={`w-full flex justify-between items-center px-4 py-3.5 text-left transition-colors ${open === 'ben' ? 'bg-[#a2d8b2]/10' : 'bg-white hover:bg-[#a2d8b2]/5'}`}
+                                >
+                                    <span className={`text-lg font-bold transition-colors ${open === 'ben' ? 'text-gray-900' : 'text-gray-800'}`}>Clinical Benefits</span>
+                                    <div className={`p-1.5 rounded-full transition-all duration-300 ${open === 'ben' ? 'bg-[#a2d8b2] text-gray-900 rotate-180' : 'bg-gray-50 text-gray-400'}`}>
+                                        <ChevronDown className="w-4 h-4" />
+                                    </div>
+                                </button>
+                                <div className={`grid transition-all duration-300 ease-in-out ${open === 'ben' ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                    <div className="overflow-hidden bg-white">
+                                        <div className="p-4 pt-3 border-t border-[#a2d8b2]/20">
+                                            <ul className="space-y-3">
+                                                {product.benefits.map((b: string, i: number) => (
+                                                    <li key={i} className="flex gap-3 items-start text-sm text-gray-600">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-[#a2d8b2] mt-1.5 flex-shrink-0 shadow-sm"></span>
+                                                        <span className="leading-relaxed">{b}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
+                            </div>
 
-                        {/* CUT-BACK / MICRO-LAYERED AESTHETIC OPTION ACCORDION */}
-                        <div className="border rounded-xl overflow-hidden">
-                            <button 
-                                onClick={() => toggle("aes")} 
-                                className="w-full flex justify-between items-center p-4 font-semibold text-left bg-gray-50 hover:bg-gray-100 transition-colors"
-                            >
-                                <span className="text-lg">Cut-Back / Micro-Layered Aesthetic Option</span>
-                                {open === "aes" ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                            </button>
-                            {open === "aes" && (
-                                <div className="p-4 border-t space-y-4">
-                                    {/* Title */}
-                                    <p className="font-semibold text-gray-800">{product.aesthetic.title}</p>
-                                    
-                                    {/* Description */}
-                                    <p className="text-gray-600 leading-relaxed">
-                                        {product.aesthetic.description}
-                                    </p>
+                            {/* AESTHETIC OPTION */}
+                            {product.aesthetic && (
+                                <div className={`border rounded-xl overflow-hidden transition-all duration-300 ${open === 'aes' ? 'border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/20' : 'border-gray-100 shadow-sm hover:border-[#a2d8b2]/50'}`}>
+                                    <button 
+                                        onClick={() => toggle("aes")} 
+                                        className={`w-full flex justify-between items-center px-4 py-3.5 text-left transition-colors ${open === 'aes' ? 'bg-[#a2d8b2]/10' : 'bg-white hover:bg-[#a2d8b2]/5'}`}
+                                    >
+                                        <span className={`text-lg font-bold transition-colors ${open === 'aes' ? 'text-gray-900' : 'text-gray-800'}`}>Cut-Back Aesthetic Option</span>
+                                        <div className={`p-1.5 rounded-full transition-all duration-300 ${open === 'aes' ? 'bg-[#a2d8b2] text-gray-900 rotate-180' : 'bg-gray-50 text-gray-400'}`}>
+                                            <ChevronDown className="w-4 h-4" />
+                                        </div>
+                                    </button>
+                                    <div className={`grid transition-all duration-300 ease-in-out ${open === 'aes' ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                        <div className="overflow-hidden bg-white">
+                                            <div className="p-4 pt-3 border-t border-[#a2d8b2]/20 space-y-4 text-sm">
+                                                <p className="font-bold text-gray-900">{product.aesthetic.title}</p>
+                                                
+                                                <p className="text-gray-600 leading-relaxed bg-[#a2d8b2]/10 p-3 rounded-lg border border-[#a2d8b2]/20">
+                                                    {product.aesthetic.description}
+                                                </p>
 
-                                    {/* Why Choose Title */}
-                                    <p className="font-semibold text-gray-800">{product.aesthetic.whyChooseTitle}</p>
+                                                <p className="font-bold text-gray-900 pt-1">{product.aesthetic.whyChooseTitle}</p>
 
-                                    {/* Benefits with dots */}
-                                    <ul className="space-y-3">
-                                        {product.aesthetic.benefits.map((b: string, i: number) => (
-                                            <li key={i} className="flex gap-3 text-gray-600">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-2.5 flex-shrink-0"></span>
-                                                <span>{b}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                                <ul className="space-y-2.5">
+                                                    {product.aesthetic.benefits.map((b: string, i: number) => (
+                                                        <li key={i} className="flex gap-3 items-start text-gray-600">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-[#a2d8b2] mt-1.5 flex-shrink-0 shadow-sm"></span>
+                                                            <span className="leading-relaxed">{b}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
 
-                                    {/* Conclusion */}
-                                    <p className="text-gray-600 leading-relaxed">
-                                        {product.aesthetic.conclusion}
-                                    </p>
+                                                <p className="text-gray-600 leading-relaxed italic border-l-4 border-[#a2d8b2] pl-3 mt-3 py-1">
+                                                    {product.aesthetic.conclusion}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
