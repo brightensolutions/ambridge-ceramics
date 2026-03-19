@@ -3,55 +3,51 @@
 import Link from "next/link";
 import Navbar from "../../../../components/Navbar";
 import Footer from "../../../../components/Footer";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
 import { useGLTF, OrbitControls, Center, Environment, ContactShadows, Float } from "@react-three/drei";
-import { use, useState, Suspense, useEffect, useMemo } from "react";
+import { use, useState, Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from 'three';
 
-// ✅ Dynamic Model Component with realistic materials
+// ✅ Dynamic Model Component with original material preservation
 function Model({ url, crownType, abutmentType }: { url: string, crownType: string, abutmentType: string }) {
     const { scene } = useGLTF(url);
     
-    // 1. Dynamic Abutment Material
+    // 1. Dynamic Abutment Material (Returns null if Titanium so we can use original)
     const abutmentMaterial = useMemo(() => {
         if (abutmentType === "Anodised") {
             return new THREE.MeshStandardMaterial({
-                color: new THREE.Color('#ffcc00'), // Warm Gold
+                color: new THREE.Color('#e8c353'), 
                 metalness: 1.0,
-                roughness: 0.2,
-                envMapIntensity: 1.5
+                roughness: 0.25, 
+                envMapIntensity: 1.2
             });
         }
         if (abutmentType === "Zirconia") {
             return new THREE.MeshStandardMaterial({
-                color: new THREE.Color('#fdfbf7'), // White/Opaque
-                metalness: 0.0,
-                roughness: 0.2,
-                envMapIntensity: 0.5
+                color: new THREE.Color('#fdfbf7'), 
+                metalness: 0.05,
+                roughness: 0.3,
+                envMapIntensity: 0.8
             });
         }
-        // Default to Titanium (Silver)
-        return new THREE.MeshStandardMaterial({
-            color: new THREE.Color('#ffffff'), 
-            metalness: 1.0,
-            roughness: 0.15,
-            envMapIntensity: 1.5
-        });
+        // Return null for Titanium so we know to fetch the original GLB material
+        return null; 
     }, [abutmentType]);
 
-    // 2. Dynamic Crown Material
+    // 2. Dynamic Crown Material (Returns null if Zirconia so we can use original)
     const crownMaterial = useMemo(() => {
         if (crownType === "LISI") {
             return new THREE.MeshPhysicalMaterial({
                 color: new THREE.Color('#ffffff'),
                 metalness: 0.0,
-                roughness: 0.05,
-                transmission: 0.8,
-                thickness: 2.0,
-                envMapIntensity: 1.2,
+                roughness: 0.1,
+                transmission: 0.5, 
+                thickness: 1.0,
+                envMapIntensity: 1.0,
                 clearcoat: 1.0,
-                clearcoatRoughness: 0.1
+                clearcoatRoughness: 0.1,
+                side: THREE.FrontSide 
             });
         }
         if (crownType === "PFM") {
@@ -59,27 +55,27 @@ function Model({ url, crownType, abutmentType }: { url: string, crownType: strin
                 color: new THREE.Color('#f3eee6'),
                 metalness: 0.0,
                 roughness: 0.3,
-                envMapIntensity: 0.8
+                envMapIntensity: 0.8,
+                side: THREE.FrontSide
             });
         }
-        return new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color('#fdfbf7'), 
-            metalness: 0.0,
-            roughness: 0.2,
-            transmission: 0.2, 
-            thickness: 1.5,
-            envMapIntensity: 0.8
-        });
+        // Return null for Zirconia so we know to fetch the original GLB material
+        return null; 
     }, [crownType]);
 
-    // 3. Apply Materials to the cloned scene
+    // 3. Apply Materials to the cloned scene, prioritizing original GLB materials
     const clonedScene = useMemo(() => {
         const clone = scene.clone();
         
         clone.traverse((node: any) => {
             if (node.isMesh) {
+                // Save the original material from the GLB file safely in userData
+                if (!node.userData.originalMaterial) {
+                    node.userData.originalMaterial = node.material;
+                }
+
                 const nodeName = node.name.toLowerCase();
-                const materialName = node.material?.name?.toLowerCase() || '';
+                const materialName = node.userData.originalMaterial?.name?.toLowerCase() || '';
                 
                 const isAbutment = 
                     nodeName.includes('abutment') || nodeName.includes('implant') || 
@@ -92,10 +88,13 @@ function Model({ url, crownType, abutmentType }: { url: string, crownType: strin
                     nodeName.includes('teeth') || nodeName.includes('zirconia') || 
                     materialName.includes('ceramic') || materialName.includes('crown');
 
+                // Apply either the newly generated material, or fallback to the original GLB material
                 if (isAbutment || (node.position.y > 0 && nodeName.includes('connector'))) {
-                    node.material = abutmentMaterial;
+                    node.material = abutmentMaterial || node.userData.originalMaterial;
                 } else if (isCrown) {
-                    node.material = crownMaterial;
+                    node.material = crownMaterial || node.userData.originalMaterial;
+                } else {
+                    node.material = node.userData.originalMaterial; // Default for everything else
                 }
                 
                 node.castShadow = true;
@@ -362,9 +361,45 @@ export default function ProductDetailPage({
     const [isClient, setIsClient] = useState(false);
     const [modelError, setModelError] = useState(false);
 
+    // Reference to control the 3D Camera explicitly
+    const controlsRef = useRef<any>(null);
+
     useEffect(() => {
         setIsClient(true);
     }, []);
+
+    // Interactive Zoom Logic
+    const handleZoom = (direction: 'in' | 'out') => {
+        if (controlsRef.current) {
+            const controls = controlsRef.current;
+            const camera = controls.object;
+            const dir = new THREE.Vector3().subVectors(camera.position, controls.target);
+            
+            if (direction === 'in') {
+                dir.multiplyScalar(0.75); // Zoom in by 25%
+            } else {
+                dir.multiplyScalar(1.25); // Zoom out by 25%
+            }
+            
+            // Respect OrbitControls min/max distance manually
+            if (dir.length() < 2) dir.setLength(2);
+            if (dir.length() > 10) dir.setLength(10);
+
+            camera.position.copy(controls.target).add(dir);
+            controls.update();
+        }
+    };
+
+    // Reset Camera to standard viewing angle
+    const handleReset = () => {
+        if (controlsRef.current) {
+            const controls = controlsRef.current;
+            const camera = controls.object;
+            camera.position.set(5, 3, 5);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        }
+    };
 
     if (!product) return <div className="p-20 text-center text-gray-500">Product not found</div>;
 
@@ -388,7 +423,35 @@ export default function ProductDetailPage({
                     <div className="space-y-6">
 
                         {/* 3D MODEL WITH BEAUTIFUL GRADIENT BACKGROUND */}
-                        <div className="bg-gradient-to-b from-gray-50 to-[#a2d8b2]/20 rounded-[2rem] h-[550px] border border-[#a2d8b2]/30 overflow-hidden relative shadow-sm">
+                        <div className="bg-gradient-to-b from-gray-50 to-[#a2d8b2]/20 rounded-[2rem] h-[550px] border border-[#a2d8b2]/30 overflow-hidden relative shadow-sm group">
+                            
+                            {/* FLOATING ZOOM CONTROLS UI */}
+                            {isClient && !modelError && (
+                                <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <button 
+                                        onClick={() => handleZoom('in')} 
+                                        className="bg-white/80 backdrop-blur-md p-3 rounded-full shadow-lg border border-gray-100 hover:bg-[#a2d8b2] hover:text-teal-950 transition-all duration-300 text-gray-600 hover:-translate-y-1"
+                                        title="Zoom In"
+                                    >
+                                        <ZoomIn className="w-5 h-5" />
+                                    </button>
+                                    <button 
+                                        onClick={() => handleZoom('out')} 
+                                        className="bg-white/80 backdrop-blur-md p-3 rounded-full shadow-lg border border-gray-100 hover:bg-[#a2d8b2] hover:text-teal-950 transition-all duration-300 text-gray-600 hover:-translate-y-1"
+                                        title="Zoom Out"
+                                    >
+                                        <ZoomOut className="w-5 h-5" />
+                                    </button>
+                                    <button 
+                                        onClick={handleReset} 
+                                        className="bg-white/80 backdrop-blur-md p-3 rounded-full shadow-lg border border-gray-100 hover:bg-gray-100 transition-all duration-300 text-gray-600 mt-2 hover:-translate-y-1"
+                                        title="Reset View"
+                                    >
+                                        <RotateCcw className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            )}
+
                             {isClient && !modelError && (
                                 <Canvas
                                     camera={{ 
@@ -419,7 +482,9 @@ export default function ProductDetailPage({
                                         <ContactShadows position={[0, -2, 0]} opacity={0.3} color="#6ba67e" scale={10} blur={2.5} far={4} />
                                     </Suspense>
 
+                                    {/* Link the ref to our controls */}
                                     <OrbitControls
+                                        ref={controlsRef}
                                         enableZoom
                                         enablePan
                                         enableRotate
@@ -500,7 +565,7 @@ export default function ProductDetailPage({
 
                     </div>
 
-                    {/* RIGHT COLUMN - Product Information (Aligned to Top) */}
+                    {/* RIGHT COLUMN - Product Information */}
                     <div className="space-y-6">
                         
                         {/* Headers */}
