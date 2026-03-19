@@ -427,7 +427,7 @@ export default function ProductDetailPage({
                     </h1>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
                     {/* LEFT COLUMN - 3D Model and Controls */}
                     <div className="space-y-6">
