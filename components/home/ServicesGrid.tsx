@@ -6,26 +6,26 @@ import Link from "next/link";
 
 const SERVICES = [
     {
-        title: "Crowns & Bridges",
-        desc: "Aesthetic master-crafted restorations using Zirconia, E.max, and precious metals.",
+        title: "Crowns, Bridges & Veneers",
+        desc: "Advanced ceramic restorations with exceptional aesthetic detail",
         link: "/",
         image: "bg-gray-100" 
     },
     {
         title: "Implant Solutions",
-        desc: "Custom abutments and screw-retained hybrids compatible with all major implant systems.",
+        desc: "Custom abutments and screw‑retained restorations compatible with all major implant systems",
         link: "/",
         image: "bg-gray-200"
     },
     {
         title: "Digital Smile Design",
-        desc: "Complete treatment planning and visualization for predictable cosmetic outcomes.",
+        desc: "Comprehensive visual planning for predictable cosmetic results",
         link: "/",
         image: "bg-gray-100"
     },
     {
-        title: "Clear Aligners",
-        desc: "Invisible orthodontic solutions manufactured in-house for faster turnaround.",
+        title: "Clear Aligner Solutions",
+        desc: "Orthodontic planning and aligner design tailored to your workflow",
         link: "/",
         image: "bg-gray-200"
     }
@@ -43,7 +43,7 @@ export default function ServicesGrid() {
                                 Our Expertise
                             </span>
                             <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-tight">
-                                Comprehensive <br /> Digital Solutions
+                                TAILORED SOLUTIONS FOR DIGITAL AND ANALOGUE WORKFLOWS 
                             </h2>
                         </div>
 

@@ -36,9 +36,9 @@ function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string
 }
 
 const stats = [
-    { value: 35, suffix: "+", label: "Years of Excellence", desc: "Decades of precision craftsmanship" },
-    { value: 10, suffix: "k+", label: "Cases Delivered", desc: "Restorations shipped with care" },
-    { value: 100, suffix: "+", label: "Partner Clinics", desc: "Trusted clinical relationships" },
+    { value: 40, suffix: "+", label: "Years of Excellence", desc: "Decades of precision craftsmanship" },
+    { value: 250, suffix: "k+", label: "Cases Delivered", desc: "Restorations shipped with care" },
+    { value: 5000, suffix: "+", label: "Partner Clinics", desc: "Trusted clinical relationships" },
     { value: 99, suffix: "%", label: "Satisfaction Rate", desc: "Consistent quality outcomes" },
 ];
 
@@ -54,7 +54,7 @@ export default function StatsCounter() {
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    className="text-[10px] tracking-[0.4em] uppercase font-black text-white/30 mb-20 text-center"
+                    className="text-[10px] tracking-[0.4em] uppercase font-black text-white/50 mb-20 text-center"
                 >
                     Laboratory Performance
                 </motion.p>
@@ -75,7 +75,7 @@ export default function StatsCounter() {
                             <p className="text-sm font-bold uppercase tracking-widest text-dentalGold mb-2">
                                 {stat.label}
                             </p>
-                            <p className="text-xs text-white/40 leading-relaxed">
+                            <p className="text-sm text-white/50 leading-relaxed">
                                 {stat.desc}
                             </p>
                         </motion.div>

@@ -27,10 +27,9 @@
         "./*"
       ]
     },
-    "baseUrl": ".", // ← added (helps with absolute imports)
     "types": [
       "node"
-    ] // ← optional, for Node.js types if using server code
+    ]
   },
   "include": [
     "next-env.d.ts",

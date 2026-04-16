@@ -7,8 +7,9 @@ import Reveal from "../../components/Reveal";
 import { Download } from "lucide-react";
 
 const files = [
-  { title: "Layout 1", type: "PDF", size: "307 KB" },
-  { title: "Postage-Paid-Label-AC-Premier-House", type: "PDF", size: "75 KB" },
+  { title: "Shade Analysis Form", type: "PDF", size: "307 KB" },
+  { title: "Smile Design Analysis Form", type: "PDF", size: "75 KB" },
+   { title: "Laboratory Prescription Sheet", type: "PDF", size: "75 KB" },
 ];
 
 export default function DownloadsPage() {

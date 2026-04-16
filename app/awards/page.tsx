@@ -10,7 +10,7 @@ import {
   useSpring,
   useInView,
 } from "framer-motion";
-import { CheckCircle2, ShieldCheck, Trophy, Cpu } from "lucide-react";
+import { CheckCircle2, ShieldCheck, Trophy, Cpu, Award, Medal, Mic, Users } from "lucide-react";
 
 /* ─── TOKENS ─────────────────────────────── */
 const FOREST = "#162e1e";
@@ -57,6 +57,58 @@ export default function AwardsPage() {
 
   const [activeImage, setActiveImage] = React.useState<string | null>(null);
 
+  // Award data with 8 images from /public/awards folder
+  const awardItems = [
+    {
+      image: "/awards/award-1.png", // Replace with your actual filename
+      title: "Aesthetic Dentistry Awards",
+      subtitle: "Winners",
+      category: "aesthetic",
+    },
+    {
+      image: "/awards/award-2.png", // Replace with your actual filename
+      title: "Aesthetic Dentistry Awards",
+      subtitle: "Winners",
+      category: "aesthetic",
+    },
+    {
+      image: "/awards/awards3.png", // Replace with your actual filename
+      title: "Laboratory Awards Winner",
+      subtitle: "Best Private Dental Laboratory UK",
+      category: "laboratory",
+    },
+    {
+      image: "/awards/award-4.png", // Replace with your actual filename
+      title: "Laboratory Awards Winner",
+      subtitle: "Best Private Dental Laboratory UK",
+      category: "laboratory",
+    },
+    {
+      image: "/awards/award-5.png", // Replace with your actual filename
+      title: "Invitation to Present",
+      subtitle: "Digital Symposium - Ollie A.",
+      category: "presentation",
+    },
+    {
+      image: "/awards/award-6.png", // Replace with your actual filename
+      title: "Invitation to Present",
+      subtitle: "Launch of Atlantis Abutments UK - Mark A",
+      category: "presentation",
+    },
+    {
+      image: "/awards/awards-7.png", // Replace with your actual filename
+      title: "Winner",
+      subtitle: "Aesthetic Dentistry Awards - Smile Makeover",
+      category: "winner",
+    },
+    {
+      image: "/awards/awards-8.png", // Replace with your actual filename
+      title: "Winner",
+      subtitle: "Aesthetic Dentistry Awards - Smile Makeover",
+      category: "winner",
+    },
+  ];
+
   return (
     <main
       className="bg-white min-h-screen text-slate-900 selection:bg-emerald-100 relative"
@@ -86,7 +138,7 @@ export default function AwardsPage() {
 
       {/* ═════════ HERO ═════════ */}
       <header
-        className="relative px-6 md:px-16 lg:px-24 pt-40 pb-16 overflow-hidden" // reduced pb from 28 to 16
+        className="relative px-6 md:px-16 lg:px-24 pt-40 pb-16 overflow-hidden"
         style={{ background: "#f8faf9" }}
       >
         <div className="max-w-[1600px] mx-auto grid lg:grid-cols-12 gap-12 items-center">
@@ -157,7 +209,7 @@ export default function AwardsPage() {
       </header>
 
       {/* ═════════ CARDS ═════════ */}
-      <section className="px-6 md:px-16 lg:px-24 pt-8 pb-28 bg-[#f8faf9]"> {/* reduced pt from 28 to 8 */}
+      <section className="px-6 md:px-16 lg:px-24 pt-8 pb-28 bg-[#f8faf9]">
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-10 lg:gap-12">
           {[
             {
@@ -271,6 +323,196 @@ export default function AwardsPage() {
                 </div>
               </Reveal>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═════════ 8 AWARDS WITH IMAGES & CONTENT ═════════ */}
+      <section className="px-6 md:px-16 lg:px-24 py-24 bg-[#f8faf9]">
+        <div className="max-w-7xl mx-auto">
+          <Reveal>
+            <div className="text-center mb-12">
+              <Award className="w-8 h-8 mx-auto mb-4" style={{ color: DEEP }} />
+              <p
+                className="text-[13px] font-black uppercase tracking-[0.40em] mb-3"
+                style={{ color: DEEP }}
+              >
+                Our Prestigious Awards
+              </p>
+              <h2 className="text-2xl md:text-3xl font-semibold text-slate-700">
+                Celebrating Excellence in Dental Ceramics
+              </h2>
+            </div>
+          </Reveal>
+
+          {/* First 2 awards - Aesthetic Dentistry Awards Winners (Centered row) */}
+          <div className="mb-16">
+            <div className="text-center mb-8">
+              <Medal className="w-6 h-6 mx-auto mb-2" style={{ color: DEEP }} />
+              <h3 className="text-xl md:text-2xl font-semibold text-slate-800">
+                Aesthetic Dentistry Awards Winners
+              </h3>
+              <div className="w-12 h-[1px] mx-auto mt-3" style={{ background: DEEP }} />
+            </div>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {awardItems.slice(0, 2).map((item, index) => (
+                <Reveal key={index} delay={index * 0.08}>
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    className="group bg-white rounded-xl overflow-hidden border border-[#e4eee7] shadow-sm hover:shadow-xl transition-all duration-300"
+                  >
+                    <div
+                      onClick={() => setActiveImage(item.image)}
+                      className="relative w-full aspect-square cursor-zoom-in overflow-hidden bg-gray-50"
+                    >
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    </div>
+                    <div className="p-5 text-center border-t border-[#e4eee7]">
+                      <p className="text-[13px] font-bold uppercase tracking-wider" style={{ color: DEEP }}>
+                        {item.title}
+                      </p>
+                      <p className="text-[15px] font-medium text-slate-700 mt-1">
+                        {item.subtitle}
+                      </p>
+                    </div>
+                  </motion.div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+
+          {/* Awards 3 & 4 - Laboratory Awards Winner */}
+          <div className="mb-16">
+            <div className="text-center mb-8">
+              <Trophy className="w-6 h-6 mx-auto mb-2" style={{ color: DEEP }} />
+              <h3 className="text-xl md:text-2xl font-semibold text-slate-800">
+                Laboratory Awards Winner
+              </h3>
+              <p className="text-slate-500 text-sm mt-1">Best Private Dental Laboratory UK</p>
+              <div className="w-12 h-[1px] mx-auto mt-3" style={{ background: DEEP }} />
+            </div>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {awardItems.slice(2, 4).map((item, index) => (
+                <Reveal key={index} delay={index * 0.08}>
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    className="group bg-white rounded-xl overflow-hidden border border-[#e4eee7] shadow-sm hover:shadow-xl transition-all duration-300"
+                  >
+                    <div
+                      onClick={() => setActiveImage(item.image)}
+                      className="relative w-full aspect-square cursor-zoom-in overflow-hidden bg-gray-50"
+                    >
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    </div>
+                    <div className="p-5 text-center border-t border-[#e4eee7]">
+                      <p className="text-[13px] font-bold uppercase tracking-wider" style={{ color: DEEP }}>
+                        {item.title}
+                      </p>
+                      <p className="text-[15px] font-medium text-slate-700 mt-1">
+                        {item.subtitle}
+                      </p>
+                    </div>
+                  </motion.div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+
+          {/* Awards 5 & 6 - Invitation to Present */}
+          <div className="mb-16">
+            <div className="text-center mb-8">
+              <Mic className="w-6 h-6 mx-auto mb-2" style={{ color: DEEP }} />
+              <h3 className="text-xl md:text-2xl font-semibold text-slate-800">
+                Invitation to Present
+              </h3>
+              <div className="w-12 h-[1px] mx-auto mt-3" style={{ background: DEEP }} />
+            </div>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {awardItems.slice(4, 6).map((item, index) => (
+                <Reveal key={index} delay={index * 0.08}>
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    className="group bg-white rounded-xl overflow-hidden border border-[#e4eee7] shadow-sm hover:shadow-xl transition-all duration-300"
+                  >
+                    <div
+                      onClick={() => setActiveImage(item.image)}
+                      className="relative w-full aspect-square cursor-zoom-in overflow-hidden bg-gray-50"
+                    >
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    </div>
+                    <div className="p-5 text-center border-t border-[#e4eee7]">
+                      <p className="text-[13px] font-bold uppercase tracking-wider" style={{ color: DEEP }}>
+                        {item.title}
+                      </p>
+                      <p className="text-[15px] font-medium text-slate-700 mt-1">
+                        {item.subtitle}
+                      </p>
+                    </div>
+                  </motion.div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+
+          {/* Awards 7 & 8 - Winner Aesthetic Dentistry Awards Smile Makeover */}
+          <div>
+            <div className="text-center mb-8">
+              <Medal className="w-6 h-6 mx-auto mb-2" style={{ color: DEEP }} />
+              <h3 className="text-xl md:text-2xl font-semibold text-slate-800">
+                Winner - Aesthetic Dentistry Awards
+              </h3>
+              <p className="text-slate-500 text-sm mt-1">Smile Makeover</p>
+              <div className="w-12 h-[1px] mx-auto mt-3" style={{ background: DEEP }} />
+            </div>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {awardItems.slice(6, 8).map((item, index) => (
+                <Reveal key={index} delay={index * 0.08}>
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    className="group bg-white rounded-xl overflow-hidden border border-[#e4eee7] shadow-sm hover:shadow-xl transition-all duration-300"
+                  >
+                    <div
+                      onClick={() => setActiveImage(item.image)}
+                      className="relative w-full aspect-square cursor-zoom-in overflow-hidden bg-gray-50"
+                    >
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    </div>
+                    <div className="p-5 text-center border-t border-[#e4eee7]">
+                      <p className="text-[13px] font-bold uppercase tracking-wider" style={{ color: DEEP }}>
+                        {item.title}
+                      </p>
+                      <p className="text-[15px] font-medium text-slate-700 mt-1">
+                        {item.subtitle}
+                      </p>
+                    </div>
+                  </motion.div>
+                </Reveal>
+              ))}
+            </div>
           </div>
         </div>
       </section>

@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const services = [
   {
-    title: "Crown & Bridge",
+    title: "Crown, Bridge & Veneer",
     desc: "Precision-engineered zirconia and ceramic restorations crafted for strength, fit and aesthetics.",
     img: "/services/crown.jpg",
     link: "/services/crown-bridge",
@@ -18,7 +18,7 @@ const services = [
     link: "/services/aligners",
   },
   {
-    title: "Implant Restorations",
+    title: "Implant Supported",
     desc: "Custom abutments and full-arch implant solutions for long-term clinical success.",
     img: "/services/implants.jpg",
     link: "/services/implants",
@@ -40,11 +40,11 @@ export default function ServicesPage() {
       <section className="pt-40 pb-20 px-10 bg-dentalCream">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-6xl font-black uppercase tracking-tight text-dentalForest">
-            Clinical Services
+            Digital Restorative Services
           </h1>
           <p className="mt-6 text-gray-600 max-w-2xl">
-            A comprehensive suite of digital dental laboratory solutions designed
-            to support modern clinics with precision restorations and advanced workflows.
+            A comprehensive suite of digital dental laboratory services chosen to support modern dental clinics 
+            with precision restorations and advanced workflows
           </p>
         </div>
       </section>
