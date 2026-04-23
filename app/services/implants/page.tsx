@@ -67,7 +67,7 @@ export default function ImplantsPage() {
                                         />
                                     </div>
                                     <div className="p-6">
-                                        <h3 className="text-lg font-bold uppercase tracking-tight text-[#2d6a4f] group-hover:text-[#7ab88a] transition-colors">
+                                        <h3 className="text-lg font-bold uppercase tracking-tight text-black group-hover:text-[#7ab88a] transition-colors">
                                             {product.name}
                                         </h3>
                                     </div>
@@ -105,7 +105,7 @@ export default function ImplantsPage() {
                                         />
                                     </div>
                                     <div className="p-6">
-                                        <h3 className="text-lg font-bold uppercase tracking-tight text-[#2d6a4f] group-hover:text-[#7ab88a] transition-colors">
+                                        <h3 className="text-lg font-bold uppercase tracking-tight text-black group-hover:text-[#7ab88a] transition-colors">
                                             {product.name}
                                         </h3>
                                     </div>
