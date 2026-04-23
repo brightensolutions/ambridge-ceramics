@@ -10,8 +10,8 @@ export default function ImplantsPage() {
     return (
         <main className="bg-[#f8fbf9] min-h-screen relative overflow-hidden font-sans">
             {/* AMBIENT BACKGROUND EFFECTS */}
-            <div className="absolute top-[-5%] left-[-10%] w-[50%] h-[50%] bg-[#a2d8b2] rounded-full mix-blend-multiply filter blur-[120px] opacity-30 animate-pulse" style={{ animationDuration: '5s' }}></div>
-            <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-[#a2d8b2] rounded-full mix-blend-multiply filter blur-[100px] opacity-20"></div>
+            <div className="absolute top-[-5%] left-[-10%] w-[50%] h-[50%] bg-[#a2d8b2] mix-blend-multiply filter blur-[120px] opacity-30 animate-pulse" style={{ animationDuration: '5s' }}></div>
+            <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-[#a2d8b2] mix-blend-multiply filter blur-[100px] opacity-20"></div>
 
             <Navbar />
 
@@ -21,7 +21,7 @@ export default function ImplantsPage() {
                 <div className="animate-fadeIn">
                     <Link
                         href="/services"
-                        className="group inline-flex items-center text-gray-500 mb-8 hover:text-[#7ab88a] transition-all duration-300 font-medium bg-white/60 backdrop-blur-md px-5 py-2.5 rounded-full border border-gray-100 shadow-sm hover:shadow-md"
+                        className="group inline-flex items-center text-gray-500 mb-8 hover:text-[#7ab88a] transition-all duration-300 font-medium bg-white/60 backdrop-blur-md px-5 py-2.5 border border-gray-100 shadow-sm hover:shadow-md"
                     >
                         <ArrowLeft className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
                         Back to Services
@@ -54,9 +54,9 @@ export default function ImplantsPage() {
                             { name: "Posterior 3 Unit Bridge", slug: "posterior-3-unit-bridge-screw", image: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&q=80&w=600" },
                         ].map((product, idx) => (
                             <Link key={idx} href={`/services/implants/${product.slug}`} className="group cursor-pointer flex flex-col items-center">
-                                {/* Premium Glass Card Wrapper */}
-                                <div className="w-full aspect-square bg-white rounded-[2rem] p-3 mb-6 relative shadow-sm border border-gray-100 group-hover:border-[#a2d8b2]/60 group-hover:shadow-[0_20px_40px_-15px_rgba(162,216,178,0.5)] transition-all duration-500 transform group-hover:-translate-y-2">
-                                    <div className="w-full h-full relative rounded-2xl overflow-hidden bg-gray-50">
+                                {/* Premium Glass Card Wrapper - no border radius */}
+                                <div className="w-full aspect-square bg-white p-3 mb-6 relative shadow-sm border border-gray-100 group-hover:border-[#a2d8b2]/60 group-hover:shadow-[0_20px_40px_-15px_rgba(162,216,178,0.5)] transition-all duration-500 transform group-hover:-translate-y-2">
+                                    <div className="w-full h-full relative overflow-hidden bg-gray-50">
                                         <Image
                                             src={product.image}
                                             alt={product.name}
@@ -73,8 +73,8 @@ export default function ImplantsPage() {
                                     {product.name}
                                 </h3>
                                 
-                                {/* Animated underline effect */}
-                                <div className="h-0.5 w-0 bg-[#a2d8b2] mt-3 transition-all duration-500 group-hover:w-12 rounded-full"></div>
+                                {/* Animated underline effect - removed rounded-full */}
+                                <div className="h-0.5 w-0 bg-[#a2d8b2] mt-3 transition-all duration-500 group-hover:w-12"></div>
                             </Link>
                         ))}
                     </div>
@@ -97,8 +97,8 @@ export default function ImplantsPage() {
                             { name: "Posterior 3 Unit Bridge", slug: "posterior-3-unit-bridge-cement", image: "https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?auto=format&fit=crop&q=80&w=600" },
                         ].map((product, idx) => (
                             <Link key={idx} href={`/services/implants/${product.slug}`} className="group cursor-pointer flex flex-col items-center">
-                                <div className="w-full aspect-square bg-white rounded-[2rem] p-3 mb-6 relative shadow-sm border border-gray-100 group-hover:border-[#a2d8b2]/60 group-hover:shadow-[0_20px_40px_-15px_rgba(162,216,178,0.5)] transition-all duration-500 transform group-hover:-translate-y-2">
-                                    <div className="w-full h-full relative rounded-2xl overflow-hidden bg-gray-50">
+                                <div className="w-full aspect-square bg-white p-3 mb-6 relative shadow-sm border border-gray-100 group-hover:border-[#a2d8b2]/60 group-hover:shadow-[0_20px_40px_-15px_rgba(162,216,178,0.5)] transition-all duration-500 transform group-hover:-translate-y-2">
+                                    <div className="w-full h-full relative overflow-hidden bg-gray-50">
                                         <Image
                                             src={product.image}
                                             alt={product.name}
@@ -114,7 +114,7 @@ export default function ImplantsPage() {
                                     {product.name}
                                 </h3>
                                 
-                                <div className="h-0.5 w-0 bg-[#a2d8b2] mt-3 transition-all duration-500 group-hover:w-12 rounded-full"></div>
+                                <div className="h-0.5 w-0 bg-[#a2d8b2] mt-3 transition-all duration-500 group-hover:w-12"></div>
                             </Link>
                         ))}
                     </div>

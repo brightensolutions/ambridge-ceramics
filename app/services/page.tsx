@@ -36,8 +36,8 @@ export default function ServicesPage() {
     <main className="bg-white min-h-screen">
       <Navbar />
 
-      {/* HERO */}
-      <section className="pt-40 pb-20 px-10 bg-dentalCream">
+      {/* HERO – decreased background opacity */}
+      <section className="pt-40 pb-20 px-10 bg-dentalCream/80">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-6xl font-black uppercase tracking-tight text-dentalForest">
             Digital Restorative Services
@@ -49,13 +49,13 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      {/* SERVICES GRID */}
+      {/* SERVICES GRID – all border radius removed */}
       <section className="py-28 px-10">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-10">
 
           {services.map((service, i) => (
             <Reveal key={i}>
-              <div className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
+              <div className="group bg-white border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
 
                 {/* IMAGE */}
                 <div className="h-52 bg-gray-100 overflow-hidden">
