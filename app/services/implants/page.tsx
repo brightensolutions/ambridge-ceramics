@@ -30,7 +30,7 @@ export default function ImplantsPage() {
                         <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#a2d8b2] opacity-20 blur-3xl rounded-full"></div>
                         <div className="absolute bottom-0 right-0 w-60 h-60 bg-[#a2d8b2] opacity-10 blur-3xl rounded-full"></div>
                         
-                        <h1 className="text-6xl font-black uppercase tracking-tight text-[#2d6a4f] relative z-10">
+                        <h1 className="text-6xl font-black uppercase tracking-tight text-black relative z-10">
                             Implants
                         </h1>
                         <p className="mt-6 text-gray-600 max-w-2xl relative z-10">
