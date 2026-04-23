@@ -19,7 +19,7 @@ import { SkeletonUtils, GLTF } from "three-stdlib";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 // ============================================================
-// MODEL COMPONENT (with material overrides + base hiding)
+// MODEL COMPONENT (with material overrides + base hiding + onLoaded callback)
 // ============================================================
 type ModelProps = {
   url: string;
@@ -27,6 +27,7 @@ type ModelProps = {
   abutmentType: string;
   hideCrown: boolean;
   hideAbutment: boolean;
+  onLoaded?: () => void;
 };
 
 function Model({
@@ -35,6 +36,7 @@ function Model({
   abutmentType,
   hideCrown,
   hideAbutment,
+  onLoaded,
 }: ModelProps) {
   const { scene } = useGLTF(url) as GLTF;
   const { gl } = useThree();
@@ -146,7 +148,9 @@ function Model({
     clone.scale.set(scale, scale, scale);
 
     setModel(clone);
-  }, [scene, crownMaterial, abutmentMaterial, hideCrown, hideAbutment]);
+    // Notify parent that model is ready
+    if (onLoaded) onLoaded();
+  }, [scene, crownMaterial, abutmentMaterial, hideCrown, hideAbutment, onLoaded]);
 
   return model ? <primitive object={model} /> : null;
 }
@@ -379,7 +383,21 @@ const productData: { [key: string]: any } = {
 };
 
 // ============================================================
-// PAGE COMPONENT – LEFT COLUMN WITH EYE ICONS (beside heading) – all border radius removed, debug line removed
+// LOADER COMPONENT (simple spinner overlay inside the 3D frame)
+// ============================================================
+function LoaderOverlay() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-20">
+      <div className="flex flex-col items-center gap-3">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#a2d8b2]"></div>
+        <p className="text-gray-500 font-medium tracking-wide">Loading 3D model...</p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PAGE COMPONENT – with proper loader that stops when model loads
 // ============================================================
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -395,6 +413,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [hideAbutment, setHideAbutment] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [modelError, setModelError] = useState(false);
+  const [modelLoading, setModelLoading] = useState(true);
   const controlsRef = useRef<any>(null);
 
   useEffect(() => setIsClient(true), []);
@@ -445,12 +464,89 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* ========== LEFT COLUMN – ENHANCED 3D VIEWER + CONTROLS WITH EYE ICONS BESIDE HEADING ========== */}
+          {/* ========== LEFT COLUMN ========== */}
           <div className="space-y-6">
-            {/* 3D VIEWER - no border radius */}
+            {/* 3D VIEWER */}
             <div className="bg-gradient-to-b from-gray-50 to-[#a2d8b2]/20 h-[550px] border border-[#a2d8b2]/30 overflow-hidden relative shadow-sm group">
+              {/* Loader overlay - shown while modelLoading is true and no error */}
+              {isClient && !modelError && modelLoading && <LoaderOverlay />}
+
               {isClient && !modelError && (
-                <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <Canvas
+                  gl={{
+                    toneMappingExposure: 1.2,
+                    toneMapping: THREE.ACESFilmicToneMapping,
+                  }}
+                  camera={{ position: [5, 3, 5], fov: 40, near: 0.1, far: 1000 }}
+                  onError={() => setModelError(true)}
+                >
+                  <Suspense fallback={null}>
+                    <Environment
+                      files="/3d-model/industrial-room.exr"
+                      background={false}
+                      environmentIntensity={1.3}
+                    />
+                    <ambientLight intensity={1} color="#fff0e0" />
+                    <directionalLight
+                      position={[-5, 8, 3]}
+                      intensity={2.5}
+                      color="#fff5e8"
+                      castShadow
+                    />
+                    <directionalLight
+                      position={[4, 5, 3]}
+                      intensity={0.6}
+                      color="#ffeedd"
+                    />
+                    <pointLight
+                      position={[-2.5, 4.5, 2.2]}
+                      intensity={1.8}
+                      color="#ffe6b3"
+                      distance={5}
+                      decay={1.5}
+                    />
+                    <directionalLight
+                      position={[1, 2, -4]}
+                      intensity={0.4}
+                      color="#ffffff"
+                    />
+                    <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
+                      <Center>
+                        <Model
+                          url="/3d-model/For_web_test.glb"
+                          crownType={selectedCrown}
+                          abutmentType={selectedAbutment}
+                          hideCrown={hideCrown}
+                          hideAbutment={hideAbutment}
+                          onLoaded={() => setModelLoading(false)}
+                        />
+                      </Center>
+                    </Float>
+                    <ContactShadows
+                      position={[0, -2, 0]}
+                      opacity={0.5}
+                      color="#444444"
+                      scale={10}
+                      blur={3}
+                      far={4}
+                    />
+                  </Suspense>
+                  <OrbitControls
+                    ref={controlsRef}
+                    enableZoom
+                    enablePan
+                    enableRotate
+                    minDistance={2}
+                    maxDistance={10}
+                    autoRotate={true}
+                    autoRotateSpeed={1.0}
+                  />
+                </Canvas>
+              )}
+
+              {/* Zoom buttons */}
+              {isClient && !modelError && (
+                <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <button
                     onClick={() => handleZoom("in")}
                     className="bg-white/80 backdrop-blur-md p-3 shadow-lg border border-gray-100 hover:bg-[#a2d8b2] hover:text-teal-950 transition-all duration-300 text-gray-600 hover:-translate-y-1"
@@ -475,98 +571,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 </div>
               )}
 
-              {isClient && !modelError && (
-                <Canvas
-                  gl={{
-                    toneMappingExposure: 1.2,
-                    toneMapping: THREE.ACESFilmicToneMapping,
-                  }}
-                  camera={{ position: [5, 3, 5], fov: 40, near: 0.1, far: 1000 }}
-                  onError={() => setModelError(true)}
-                >
-                  <Suspense fallback={null}>
-                    {/* Environment – industrial room EXR for realistic reflections */}
-                    <Environment
-                      files="/3d-model/industrial-room.exr"
-                      background={false}
-                      environmentIntensity={1.3}
-                    />
-
-                    {/* ========== LIGHTING FOR LEFT UPPER CROWN GLOW ========== */}
-                    <ambientLight intensity={1} color="#fff0e0" />
-
-                    {/* Main light from upper-left (creates the bright crown area) */}
-                    <directionalLight
-                      position={[-5, 8, 3]}
-                      intensity={2.5}
-                      color="#fff5e8"
-                      castShadow
-                    />
-
-                    {/* Fill from right – very low to keep left dominant */}
-                    <directionalLight
-                      position={[4, 5, 3]}
-                      intensity={0.6}
-                      color="#ffeedd"
-                    />
-
-                    {/* Point light exactly on the upper-left crown area */}
-                    <pointLight
-                      position={[-2.5, 4.5, 2.2]}
-                      intensity={1.8}
-                      color="#ffe6b3"
-                      distance={5}
-                      decay={1.5}
-                    />
-
-                    {/* Very subtle back rim light */}
-                    <directionalLight
-                      position={[1, 2, -4]}
-                      intensity={0.4}
-                      color="#ffffff"
-                    />
-
-                    <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
-                      <Center>
-                        <Model
-                          url="/3d-model/For_web_test.glb"
-                          crownType={selectedCrown}
-                          abutmentType={selectedAbutment}
-                          hideCrown={hideCrown}
-                          hideAbutment={hideAbutment}
-                        />
-                      </Center>
-                    </Float>
-
-                    <ContactShadows
-                      position={[0, -2, 0]}
-                      opacity={0.5}
-                      color="#444444"
-                      scale={10}
-                      blur={3}
-                      far={4}
-                    />
-                  </Suspense>
-
-                  <OrbitControls
-                    ref={controlsRef}
-                    enableZoom
-                    enablePan
-                    enableRotate
-                    minDistance={2}
-                    maxDistance={10}
-                    autoRotate={true}
-                    autoRotateSpeed={1.0}
-                  />
-                </Canvas>
-              )}
-
               {isClient && modelError && (
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="text-center">
                     <p className="text-red-400 mb-3 font-medium">Unable to load 3D model</p>
                     <button
-                      onClick={() => setModelError(false)}
+                      onClick={() => {
+                        setModelError(false);
+                        setModelLoading(true);
+                      }}
                       className="px-6 py-2 bg-[#a2d8b2] text-gray-900 font-medium hover:bg-[#8ec29e] transition-colors shadow-sm"
                     >
                       Try Again
@@ -585,9 +598,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
               )}
             </div>
 
-            {/* Material controls – no border radius */}
+            {/* Material controls */}
             <div className="flex flex-col gap-6 bg-gray-50/50 p-6 border border-[#a2d8b2]/20">
-              {/* Crown section */}
               <div>
                 <div className="flex items-center gap-2 mb-3 ml-1">
                   <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">
@@ -618,7 +630,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 </div>
               </div>
 
-              {/* Abutment section with eye icon beside heading */}
               <div>
                 <div className="flex items-center gap-2 mb-3 ml-1">
                   <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">
@@ -651,7 +662,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             </div>
           </div>
 
-          {/* ========== RIGHT COLUMN – PRODUCT INFORMATION (UNCHANGED) – border radius removed ========== */}
+          {/* ========== RIGHT COLUMN (unchanged) ========== */}
           <div className="space-y-6">
             <div className="hidden lg:block">
               <span className="text-sm font-bold uppercase tracking-widest text-[#7ab88a] bg-[#a2d8b2]/20 px-3 py-1">
