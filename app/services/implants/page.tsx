@@ -4,117 +4,112 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export default function ImplantsPage() {
     return (
-        <main className="bg-[#f8fbf9] min-h-screen relative overflow-hidden font-sans">
-            {/* AMBIENT BACKGROUND EFFECTS */}
-            <div className="absolute top-[-5%] left-[-10%] w-[50%] h-[50%] bg-[#a2d8b2] mix-blend-multiply filter blur-[120px] opacity-30 animate-pulse" style={{ animationDuration: '5s' }}></div>
-            <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-[#a2d8b2] mix-blend-multiply filter blur-[100px] opacity-20"></div>
-
+        <main className="bg-white min-h-screen font-sans">
             <Navbar />
 
-            <section className="pt-36 pb-24 px-6 lg:px-12 max-w-[1400px] mx-auto relative z-10">
-                
-                {/* Back Button */}
-                <div className="animate-fadeIn">
-                    <Link
-                        href="/services"
-                        className="group inline-flex items-center text-gray-500 mb-8 hover:text-[#7ab88a] transition-all duration-300 font-medium bg-white/60 backdrop-blur-md px-5 py-2.5 border border-gray-100 shadow-sm hover:shadow-md"
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
-                        Back to Services
-                    </Link>
-                </div>
-
-                {/* Page Header */}
-                <div className="text-center mb-24 relative animate-slideUp" style={{ animationDelay: '0.1s' }}>
-                    
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tight text-gray-900 uppercase">
-                        Implants
-                    </h1>
-                   
-                </div>
-
-                {/* --- SCREW RETAINED SECTION --- */}
-                <div className="mb-28 animate-slideUp" style={{ animationDelay: '0.2s' }}>
-                    <div className="mb-12 relative">
-                        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 flex items-center gap-4">
-                            Screw Retained
-                            <span className="h-px flex-grow bg-gradient-to-r from-[#a2d8b2] to-transparent ml-4 opacity-50"></span>
-                        </h2>
+            <section className="pt-40 pb-8 px-10">
+                <div className="max-w-7xl mx-auto">
+                    {/* Back button - above heading */}
+                    <div className="mb-6">
+                        <Link
+                            href="/services"
+                            className="inline-flex items-center text-gray-500 hover:text-[#7ab88a] transition-colors font-medium border-b border-gray-200 pb-1 group"
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
+                            Back to Services
+                        </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 xl:gap-10">
+                    {/* Hero heading with brand green tint */}
+                    <div className="relative">
+                        {/* Subtle brand green background tint */}
+                        <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#a2d8b2] opacity-20 blur-3xl rounded-full"></div>
+                        <div className="absolute bottom-0 right-0 w-60 h-60 bg-[#a2d8b2] opacity-10 blur-3xl rounded-full"></div>
+                        
+                        <h1 className="text-6xl font-black uppercase tracking-tight text-[#2d6a4f] relative z-10">
+                            Implants
+                        </h1>
+                        <p className="mt-6 text-gray-600 max-w-2xl relative z-10">
+                            Precision implant solutions for predictable clinical outcomes. CAD/CAM custom abutments and full‑arch restorations.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            {/* SCREW RETAINED SECTION */}
+            <section className="py-12 px-10">
+                <div className="max-w-7xl mx-auto">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-12 pb-2 border-b border-[#a2d8b2] inline-block">
+                        Screw Retained
+                    </h2>
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
                         {[
                             { name: "Anterior Crown", slug: "anterior-crown-screw", image: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&q=80&w=600" },
                             { name: "Posterior Crown", slug: "posterior-crown-screw", image: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&q=80&w=600" },
                             { name: "Anterior 3 Unit Bridge", slug: "anterior-3-unit-bridge-screw", image: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&q=80&w=600" },
                             { name: "Posterior 3 Unit Bridge", slug: "posterior-3-unit-bridge-screw", image: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&q=80&w=600" },
                         ].map((product, idx) => (
-                            <Link key={idx} href={`/services/implants/${product.slug}`} className="group cursor-pointer flex flex-col items-center">
-                                {/* Premium Glass Card Wrapper - no border radius */}
-                                <div className="w-full aspect-square bg-white p-3 mb-6 relative shadow-sm border border-gray-100 group-hover:border-[#a2d8b2]/60 group-hover:shadow-[0_20px_40px_-15px_rgba(162,216,178,0.5)] transition-all duration-500 transform group-hover:-translate-y-2">
-                                    <div className="w-full h-full relative overflow-hidden bg-gray-50">
+                            <Link key={idx} href={`/services/implants/${product.slug}`} className="group">
+                                <div className="bg-white border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:border-[#a2d8b2]/50">
+                                    <div className="h-52 bg-gray-100 overflow-hidden">
                                         <Image
                                             src={product.image}
                                             alt={product.name}
-                                            fill
-                                            className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                                            width={600}
+                                            height={300}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
                                             unoptimized
                                         />
-                                        {/* Subtle overlay on hover */}
-                                        <div className="absolute inset-0 bg-[#a2d8b2]/0 group-hover:bg-[#a2d8b2]/10 transition-colors duration-500"></div>
+                                    </div>
+                                    <div className="p-6">
+                                        <h3 className="text-lg font-bold uppercase tracking-tight text-[#2d6a4f] group-hover:text-[#7ab88a] transition-colors">
+                                            {product.name}
+                                        </h3>
                                     </div>
                                 </div>
-                                
-                                <h3 className="text-lg font-bold text-gray-800 group-hover:text-[#5a966d] transition-colors duration-300 px-2 text-center">
-                                    {product.name}
-                                </h3>
-                                
-                                {/* Animated underline effect - removed rounded-full */}
-                                <div className="h-0.5 w-0 bg-[#a2d8b2] mt-3 transition-all duration-500 group-hover:w-12"></div>
                             </Link>
                         ))}
                     </div>
                 </div>
+            </section>
 
-                {/* --- CEMENT RETAINED SECTION --- */}
-                <div className="mb-20 animate-slideUp" style={{ animationDelay: '0.4s' }}>
-                    <div className="mb-12 relative">
-                        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 flex items-center gap-4">
-                            Cement Retained
-                            <span className="h-px flex-grow bg-gradient-to-r from-[#a2d8b2] to-transparent ml-4 opacity-50"></span>
-                        </h2>
-                    </div>
+            {/* CEMENT RETAINED SECTION */}
+            <section className="py-12 px-10">
+                <div className="max-w-7xl mx-auto">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-12 pb-2 border-b border-[#a2d8b2] inline-block">
+                        Cement Retained
+                    </h2>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 xl:gap-10">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
                         {[
                             { name: "Anterior Crown", slug: "anterior-crown-cement", image: "https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?auto=format&fit=crop&q=80&w=600" },
                             { name: "Posterior Crown", slug: "posterior-crown-cement", image: "https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?auto=format&fit=crop&q=80&w=600" },
                             { name: "Anterior 3 Unit Bridge", slug: "anterior-3-unit-bridge-cement", image: "https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?auto=format&fit=crop&q=80&w=600" },
                             { name: "Posterior 3 Unit Bridge", slug: "posterior-3-unit-bridge-cement", image: "https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?auto=format&fit=crop&q=80&w=600" },
                         ].map((product, idx) => (
-                            <Link key={idx} href={`/services/implants/${product.slug}`} className="group cursor-pointer flex flex-col items-center">
-                                <div className="w-full aspect-square bg-white p-3 mb-6 relative shadow-sm border border-gray-100 group-hover:border-[#a2d8b2]/60 group-hover:shadow-[0_20px_40px_-15px_rgba(162,216,178,0.5)] transition-all duration-500 transform group-hover:-translate-y-2">
-                                    <div className="w-full h-full relative overflow-hidden bg-gray-50">
+                            <Link key={idx} href={`/services/implants/${product.slug}`} className="group">
+                                <div className="bg-white border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:border-[#a2d8b2]/50">
+                                    <div className="h-52 bg-gray-100 overflow-hidden">
                                         <Image
                                             src={product.image}
                                             alt={product.name}
-                                            fill
-                                            className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                                            width={600}
+                                            height={300}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
                                             unoptimized
                                         />
-                                        <div className="absolute inset-0 bg-[#a2d8b2]/0 group-hover:bg-[#a2d8b2]/10 transition-colors duration-500"></div>
+                                    </div>
+                                    <div className="p-6">
+                                        <h3 className="text-lg font-bold uppercase tracking-tight text-[#2d6a4f] group-hover:text-[#7ab88a] transition-colors">
+                                            {product.name}
+                                        </h3>
                                     </div>
                                 </div>
-                                
-                                <h3 className="text-lg font-bold text-gray-800 group-hover:text-[#5a966d] transition-colors duration-300 px-2 text-center">
-                                    {product.name}
-                                </h3>
-                                
-                                <div className="h-0.5 w-0 bg-[#a2d8b2] mt-3 transition-all duration-500 group-hover:w-12"></div>
                             </Link>
                         ))}
                     </div>
@@ -122,23 +117,6 @@ export default function ImplantsPage() {
             </section>
 
             <Footer />
-
-            <style jsx>{`
-                @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(40px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                .animate-slideUp {
-                    animation: slideUp 0.6s ease-out forwards;
-                }
-                .animate-fadeIn {
-                    animation: fadeIn 0.6s ease-out forwards;
-                }
-            `}</style>
         </main>
     );
 }
