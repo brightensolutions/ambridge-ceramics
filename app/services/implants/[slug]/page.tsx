@@ -482,11 +482,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 >
                   <Suspense fallback={null}>
                     <Environment
-                      files="/3d-model/industrial-room.exr"
+                      files="/3d-model/Industrial_Room.exr"
                       background={false}
                       environmentIntensity={1.3}
                     />
-                    <ambientLight intensity={1} color="#fff0e0" />
+                    {/* <ambientLight intensity={1} color="#fff0e0" />
                     <directionalLight
                       position={[-5, 8, 3]}
                       intensity={2.5}
@@ -509,7 +509,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                       position={[1, 2, -4]}
                       intensity={0.4}
                       color="#ffffff"
-                    />
+                    /> */}
                     <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
                       <Center>
                         <Model
