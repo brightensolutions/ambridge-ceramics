@@ -19,6 +19,35 @@ import { SkeletonUtils, GLTF } from "three-stdlib";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 // ============================================================
+// INTERIOR LIGHT COMPONENT - activates when abutment is hidden
+// ============================================================
+type InteriorLightProps = {
+  hideAbutment: boolean;
+};
+
+function CrownInteriorLight({ hideAbutment }: InteriorLightProps) {
+  const { scene } = useThree();
+  const lightRef = useRef<THREE.PointLight>(null);
+
+  useEffect(() => {
+    if (!lightRef.current) return;
+    // When abutment is hidden, turn on interior light; otherwise off
+    lightRef.current.intensity = hideAbutment ? 1.8 : 0;
+  }, [hideAbutment]);
+
+  return (
+    <pointLight
+      ref={lightRef}
+      position={[0, 0.8, 0.2]}
+      color="#fff5e0"
+      distance={3}
+      decay={1.5}
+      intensity={0} // initial off, controlled by effect
+    />
+  );
+}
+
+// ============================================================
 // MODEL COMPONENT (with material overrides + base hiding + onLoaded callback)
 // ============================================================
 type ModelProps = {
@@ -480,36 +509,39 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                   camera={{ position: [5, 3, 5], fov: 40, near: 0.1, far: 1000 }}
                   onError={() => setModelError(true)}
                 >
+                  {/* Set solid background color #616161 */}
+                  <color attach="background" args={["#616161"]} />
+
                   <Suspense fallback={null}>
                     <Environment
                       files="/3d-model/Industrial_Room.exr"
                       background={false}
                       environmentIntensity={1.3}
                     />
-                    {/* <ambientLight intensity={1} color="#fff0e0" />
+                    {/* <ambientLight intensity={1} color="#fff0e0" /> */}
                     <directionalLight
                       position={[-5, 8, 3]}
-                      intensity={2.5}
+                      intensity={2}
                       color="#fff5e8"
                       castShadow
-                    />
+                    /> 
                     <directionalLight
                       position={[4, 5, 3]}
-                      intensity={0.6}
+                      intensity={1}
                       color="#ffeedd"
                     />
                     <pointLight
-                      position={[-2.5, 4.5, 2.2]}
-                      intensity={1.8}
+                      position={[5, 4.5, 2.2]}
+                      intensity={3.5}
                       color="#ffe6b3"
                       distance={5}
-                      decay={1.5}
+                      decay={2}
                     />
                     <directionalLight
                       position={[1, 2, -4]}
-                      intensity={0.4}
+                      intensity={1}
                       color="#ffffff"
-                    /> */}
+                    /> 
                     <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
                       <Center>
                         <Model
@@ -522,14 +554,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                         />
                       </Center>
                     </Float>
-                    <ContactShadows
+                    {/* Interior light that activates when abutment is hidden */}
+                    <CrownInteriorLight hideAbutment={hideAbutment} />
+                    {/* <ContactShadows
                       position={[0, -2, 0]}
                       opacity={0.5}
                       color="#444444"
                       scale={10}
                       blur={3}
                       far={4}
-                    />
+                    /> */}
                   </Suspense>
                   <OrbitControls
                     ref={controlsRef}
