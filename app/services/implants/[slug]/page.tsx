@@ -85,6 +85,8 @@ function Model({
   }, [gl]);
 
   // ----- CROWN MATERIALS (glossy / translucent) -----
+  // For PFM in Monolith mode, we treat it as Zirconia (no manual material)
+  // So PFM also returns null here (using original GLB material)
   const crownMaterial = useMemo(() => {
     if (crownType === "LISI") {
       return new THREE.MeshPhysicalMaterial({
@@ -98,17 +100,8 @@ function Model({
         envMapIntensity: 0.9,
       });
     }
-    if (crownType === "PFM") {
-      return new THREE.MeshPhysicalMaterial({
-        color: "#e8d9c4",
-        roughness: 0.35,
-        metalness: 0,
-        clearcoat: 0.4,
-        clearcoatRoughness: 0.35,
-        envMapIntensity: 0.8,
-      });
-    }
-    // Zirconia → null = preserve original GLB material (has natural warm tone)
+    // PFM now returns null -> looks same as Zirconia (original GLB material)
+    // Zirconia also returns null
     return null;
   }, [crownType]);
 
@@ -515,6 +508,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   // For cutback mode, crown options: only Zirconia active, others disabled with cross line
   const isCrownDisabledInCutback = (crown: string) => modelMode === "cutback" && crown !== "Zirconia";
 
+  // When PFM is selected in Monolith, force hideAbutment to false and disable the toggle
+  useEffect(() => {
+    if (isMonolithPFM && currentState.hideAbutment) {
+      updateCurrentState({ hideAbutment: false });
+    }
+  }, [isMonolithPFM, currentState.hideAbutment]);
+
   if (!product) return <div className="p-20 text-center text-gray-500">Product not found</div>;
 
   return (
@@ -713,7 +713,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                   </button>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  {["Zirconia", "LISI", "PFM"].map((item) => {
+                  {["Zirconia", "PFM"].map((item) => {
                     const isDisabled = isCrownDisabledInCutback(item);
                     const isActive = currentState.crown === item && !isDisabled;
                     return (
@@ -753,9 +753,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                     Abutment Material
                   </h3>
                   <button
-                    onClick={() => updateCurrentState({ hideAbutment: !currentState.hideAbutment })}
-                    className="text-gray-500 hover:text-gray-700 transition-colors p-1 hover:bg-gray-200/50"
-                    title={currentState.hideAbutment ? "Show Abutment" : "Hide Abutment"}
+                    onClick={() => {
+                      if (isMonolithPFM) return;
+                      updateCurrentState({ hideAbutment: !currentState.hideAbutment });
+                    }}
+                    className={`text-gray-500 transition-colors p-1 hover:bg-gray-200/50 ${
+                      isMonolithPFM ? "opacity-50 cursor-not-allowed" : "hover:text-gray-700"
+                    }`}
+                    title={isMonolithPFM ? "Hide Abutment disabled for PFM in Monolith mode" : (currentState.hideAbutment ? "Show Abutment" : "Hide Abutment")}
+                    disabled={isMonolithPFM}
                   >
                     {currentState.hideAbutment ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
