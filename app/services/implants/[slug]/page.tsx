@@ -13,7 +13,7 @@ import {
   ContactShadows,
   Float,
 } from "@react-three/drei";
-import { useState, Suspense, useEffect, useMemo, useRef, use } from "react";
+import { useState, Suspense, useEffect, useMemo, useRef, use, useCallback } from "react";
 import * as THREE from "three";
 import { SkeletonUtils, GLTF } from "three-stdlib";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
@@ -184,7 +184,9 @@ function Model({
   return model ? <primitive object={model} /> : null;
 }
 
-useGLTF.preload("/3d-model/For_web_test.glb");
+// Preload both models
+useGLTF.preload("/3d-model/monolithic.glb");
+useGLTF.preload("/3d-model/cutback.glb");
 
 // ============================================================
 // PRODUCT DATA (FULL – unchanged)
@@ -426,7 +428,7 @@ function LoaderOverlay() {
 }
 
 // ============================================================
-// PAGE COMPONENT – with proper loader that stops when model loads
+// PAGE COMPONENT – with Monolith/Cutback toggle and independent state
 // ============================================================
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -435,17 +437,50 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [open, setOpen] = useState<string | null>(null);
   const toggle = (section: string) => setOpen(open === section ? null : section);
 
-  // State for 3D viewer
-  const [selectedCrown, setSelectedCrown] = useState("Zirconia");
-  const [selectedAbutment, setSelectedAbutment] = useState("Titanium");
-  const [hideCrown, setHideCrown] = useState(false);
-  const [hideAbutment, setHideAbutment] = useState(false);
+  // Model mode state: "cutback" first, "monolith" second
+  const [modelMode, setModelMode] = useState<"cutback" | "monolith">("cutback");
+  
+  // Independent state for Cutback mode
+  const [cutbackState, setCutbackState] = useState({
+    crown: "Zirconia",
+    abutment: "Titanium",
+    hideCrown: false,
+    hideAbutment: false,
+  });
+  
+  // Independent state for Monolith mode
+  const [monolithState, setMonolithState] = useState({
+    crown: "Zirconia",
+    abutment: "Titanium",
+    hideCrown: false,
+    hideAbutment: false,
+  });
+  
+  // Get current state based on active mode
+  const currentState = modelMode === "cutback" ? cutbackState : monolithState;
+  
+  // Helper to update current mode's state
+  const updateCurrentState = (updates: Partial<typeof currentState>) => {
+    if (modelMode === "cutback") {
+      setCutbackState(prev => ({ ...prev, ...updates }));
+    } else {
+      setMonolithState(prev => ({ ...prev, ...updates }));
+    }
+  };
+  
+  // UI state for 3D viewer
   const [isClient, setIsClient] = useState(false);
   const [modelError, setModelError] = useState(false);
   const [modelLoading, setModelLoading] = useState(true);
   const controlsRef = useRef<any>(null);
 
   useEffect(() => setIsClient(true), []);
+
+  // When mode changes, reset loading and error states
+  useEffect(() => {
+    setModelLoading(true);
+    setModelError(false);
+  }, [modelMode]);
 
   const handleZoom = (direction: "in" | "out") => {
     if (!controlsRef.current) return;
@@ -467,6 +502,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
     controls.target.set(0, 0, 0);
     controls.update();
   };
+
+  const handleModelLoaded = useCallback((loadedMode: "cutback" | "monolith") => {
+    if (loadedMode === modelMode) {
+      setModelLoading(false);
+    }
+  }, [modelMode]);
+
+  // Determine if abutment buttons should be disabled in monolith mode
+  const isMonolithPFM = modelMode === "monolith" && currentState.crown === "PFM";
+  
+  // For cutback mode, crown options: only Zirconia active, others disabled with cross line
+  const isCrownDisabledInCutback = (crown: string) => modelMode === "cutback" && crown !== "Zirconia";
 
   if (!product) return <div className="p-20 text-center text-gray-500">Product not found</div>;
 
@@ -518,7 +565,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                       background={false}
                       environmentIntensity={1.3}
                     />
-                    {/* <ambientLight intensity={1} color="#fff0e0" /> */}
                     <directionalLight
                       position={[-5, 8, 3]}
                       intensity={2}
@@ -545,25 +591,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                     <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
                       <Center>
                         <Model
-                          url="/3d-model/For_web_test.glb"
-                          crownType={selectedCrown}
-                          abutmentType={selectedAbutment}
-                          hideCrown={hideCrown}
-                          hideAbutment={hideAbutment}
-                          onLoaded={() => setModelLoading(false)}
+                          key={modelMode}
+                          url={`/3d-model/${modelMode === "cutback" ? "cutback" : "monolithic"}.glb`}
+                          crownType={currentState.crown}
+                          abutmentType={isMonolithPFM ? "Titanium" : currentState.abutment}
+                          hideCrown={currentState.hideCrown}
+                          hideAbutment={currentState.hideAbutment}
+                          onLoaded={() => handleModelLoaded(modelMode)}
                         />
                       </Center>
                     </Float>
                     {/* Interior light that activates when abutment is hidden */}
-                    <CrownInteriorLight hideAbutment={hideAbutment} />
-                    {/* <ContactShadows
-                      position={[0, -2, 0]}
-                      opacity={0.5}
-                      color="#444444"
-                      scale={10}
-                      blur={3}
-                      far={4}
-                    /> */}
+                    <CrownInteriorLight hideAbutment={currentState.hideAbutment} />
                   </Suspense>
                   <OrbitControls
                     ref={controlsRef}
@@ -632,6 +671,32 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
               )}
             </div>
 
+            {/* ========== MODEL MODE TOGGLE (Cutback first, then Monolith) ========== */}
+            <div>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setModelMode("cutback")}
+                  className={`px-6 py-3 border transition-all duration-300 font-medium ${
+                    modelMode === "cutback"
+                      ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
+                  }`}
+                >
+                  Cutback
+                </button>
+                <button
+                  onClick={() => setModelMode("monolith")}
+                  className={`px-6 py-3 border transition-all duration-300 font-medium ${
+                    modelMode === "monolith"
+                      ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
+                  }`}
+                >
+                  Monolith
+                </button>
+              </div>
+            </div>
+
             {/* Material controls */}
             <div className="flex flex-col gap-6 bg-gray-50/50 p-6 border border-[#a2d8b2]/20">
               <div>
@@ -640,27 +705,45 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                     Crown Material
                   </h3>
                   <button
-                    onClick={() => setHideCrown(!hideCrown)}
+                    onClick={() => updateCurrentState({ hideCrown: !currentState.hideCrown })}
                     className="text-gray-500 hover:text-gray-700 transition-colors p-1 hover:bg-gray-200/50"
-                    title={hideCrown ? "Show Crown" : "Hide Crown"}
+                    title={currentState.hideCrown ? "Show Crown" : "Hide Crown"}
                   >
-                    {hideCrown ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {currentState.hideCrown ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  {["Zirconia", "LISI", "PFM"].map((item) => (
-                    <button
-                      key={item}
-                      onClick={() => setSelectedCrown(item)}
-                      className={`px-4 py-2.5 border transition-all duration-300 font-medium ${
-                        selectedCrown === item
-                          ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
-                      }`}
-                    >
-                      {item}
-                    </button>
-                  ))}
+                  {["Zirconia", "LISI", "PFM"].map((item) => {
+                    const isDisabled = isCrownDisabledInCutback(item);
+                    const isActive = currentState.crown === item && !isDisabled;
+                    return (
+                      <button
+                        key={item}
+                        onClick={() => {
+                          if (isDisabled) return;
+                          updateCurrentState({ crown: item });
+                        }}
+                        disabled={isDisabled}
+                        className={`relative px-4 py-2.5 border transition-all duration-300 font-medium ${
+                          isActive
+                            ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
+                            : isDisabled
+                            ? "bg-gray-100 text-gray-600 border-gray-200 cursor-not-allowed disabled-cross-line"
+                            : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
+                        }`}
+                      >
+                        {item}
+                        {isDisabled && (
+                          <span
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background: "linear-gradient(135deg, transparent calc(50% - 1px), black calc(50% - 1px), black calc(50% + 1px), transparent calc(50% + 1px))",
+                            }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -670,27 +753,45 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                     Abutment Material
                   </h3>
                   <button
-                    onClick={() => setHideAbutment(!hideAbutment)}
+                    onClick={() => updateCurrentState({ hideAbutment: !currentState.hideAbutment })}
                     className="text-gray-500 hover:text-gray-700 transition-colors p-1 hover:bg-gray-200/50"
-                    title={hideAbutment ? "Show Abutment" : "Hide Abutment"}
+                    title={currentState.hideAbutment ? "Show Abutment" : "Hide Abutment"}
                   >
-                    {hideAbutment ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {currentState.hideAbutment ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  {["Titanium", "Zirconia", "Anodised"].map((item) => (
-                    <button
-                      key={item}
-                      onClick={() => setSelectedAbutment(item)}
-                      className={`px-4 py-2.5 border transition-all duration-300 font-medium ${
-                        selectedAbutment === item
-                          ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
-                      }`}
-                    >
-                      {item}
-                    </button>
-                  ))}
+                  {["Titanium", "Zirconia", "Anodised"].map((item) => {
+                    const isDisabled = isMonolithPFM;
+                    const isActive = currentState.abutment === item && !isDisabled;
+                    return (
+                      <button
+                        key={item}
+                        onClick={() => {
+                          if (isDisabled) return;
+                          updateCurrentState({ abutment: item });
+                        }}
+                        disabled={isDisabled}
+                        className={`relative px-4 py-2.5 border transition-all duration-300 font-medium ${
+                          isActive
+                            ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
+                            : isDisabled
+                            ? "bg-gray-100 text-gray-600 border-gray-200 cursor-not-allowed disabled-cross-line"
+                            : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
+                        }`}
+                      >
+                        {item}
+                        {isDisabled && (
+                          <span
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background: "linear-gradient(135deg, transparent calc(50% - 1px), black calc(50% - 1px), black calc(50% + 1px), transparent calc(50% + 1px))",
+                            }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
