@@ -4,7 +4,7 @@ import Link from "next/link";
 import Navbar from "../../../../components/Navbar";
 import Footer from "../../../../components/Footer";
 import { ArrowLeft, ChevronDown, ZoomIn, ZoomOut, RotateCcw, Eye, EyeOff } from "lucide-react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import {
   useGLTF,
   OrbitControls,
@@ -15,65 +15,37 @@ import {
 import { useState, Suspense, useEffect, useMemo, useRef, use, useCallback } from "react";
 import * as THREE from "three";
 import { SkeletonUtils, GLTF } from "three-stdlib";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 // ============================================================
-// INTERIOR LIGHT – active only when abutment hidden (reduced intensity)
+// INTERIOR LIGHT COMPONENT - activates when abutment is hidden
 // ============================================================
 type InteriorLightProps = {
   hideAbutment: boolean;
-  hideCrown: boolean;
 };
 
-function CrownInteriorLight({ hideAbutment, hideCrown }: InteriorLightProps) {
-  const active = hideAbutment && !hideCrown;
+function CrownInteriorLight({ hideAbutment }: InteriorLightProps) {
+  const lightRef = useRef<THREE.PointLight>(null);
 
-  if (!active) return null;
+  useEffect(() => {
+    if (!lightRef.current) return;
+    lightRef.current.intensity = hideAbutment ? 1.8 : 0;
+  }, [hideAbutment]);
 
   return (
-    <>
-      <pointLight
-        position={[-0.55, 0.15, 0.15]}
-        intensity={0.6}
-        distance={0.8}
-        decay={2}
-        color="#fff8ee"
-      />
-      <pointLight
-        position={[0.55, 0.15, 0.15]}
-        intensity={0.6}
-        distance={0.8}
-        decay={2}
-        color="#fff8ee"
-      />
-    </>
+    <pointLight
+      ref={lightRef}
+      position={[0, 0.8, 0.2]}
+      color="#fff5e0"
+      distance={3}
+      decay={1.5}
+      intensity={0}
+    />
   );
 }
 
-// Helper: Create a linear gradient texture (top to bottom)
-function createGradientTexture(topColor: string, bottomColor: string): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext("2d")!;
-
-  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, topColor);
-  gradient.addColorStop(1, bottomColor);
-
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.needsUpdate = true;
-  return texture;
-}
-
 // ============================================================
-// MODEL COMPONENT
-// last.glb → crown_inner uses MeshPhysicalMaterial with gradient + base color
-// cutback.glb → unchanged (original logic)
+// MODEL COMPONENT (with material overrides + base hiding + onLoaded callback)
 // ============================================================
 type ModelProps = {
   url: string;
@@ -93,14 +65,43 @@ function Model({
   onLoaded,
 }: ModelProps) {
   const { scene } = useGLTF(url) as GLTF;
+  const { gl } = useThree();
   const [model, setModel] = useState<THREE.Object3D | null>(null);
+
+  const applyMaterial = (node: THREE.Mesh, material: THREE.Material) => {
+    node.material = material.clone();
+  };
+
+  const neutralEnvMap = useMemo(() => {
+    const pmrem = new THREE.PMREMGenerator(gl);
+    pmrem.compileEquirectangularShader();
+    const env = pmrem.fromScene(new RoomEnvironment()).texture;
+    pmrem.dispose();
+    return env;
+  }, [gl]);
+
+  const crownMaterial = useMemo(() => {
+    if (crownType === "LISI") {
+      return new THREE.MeshPhysicalMaterial({
+        color: "#ede0cc",
+        roughness: 0.3,
+        transmission: 0.12,
+        thickness: 1.0,
+        clearcoat: 0.5,
+        clearcoatRoughness: 0.25,
+        ior: 1.52,
+        envMapIntensity: 0.9,
+      });
+    }
+    return null;
+  }, [crownType]);
 
   const abutmentMaterial = useMemo(() => {
     switch (abutmentType) {
       case "Titanium":
         return new THREE.MeshStandardMaterial({
           color: "#ffffff",
-          metalness: 1,
+          metalness: 1.0,
           roughness: 0,
         });
       case "Anodised":
@@ -114,24 +115,21 @@ function Model({
           color: "#e8e2d8",
           metalness: 0,
           roughness: 0.18,
+          envMap: neutralEnvMap,
+          envMapIntensity: 1.2,
         });
       default:
         return null;
     }
-  }, [abutmentType]);
-
-  // Memoize gradient texture
-  const gradientTexture = useMemo(() => createGradientTexture("#bdb0a1", "#9f8e7d"), []);
+  }, [abutmentType, neutralEnvMap]);
 
   useEffect(() => {
     if (!scene) return;
 
     const clone = SkeletonUtils.clone(scene);
-    const isLast = url.includes("last");  // changed from "monolithic"
 
     clone.traverse((node) => {
       if (!(node instanceof THREE.Mesh)) return;
-
       const name = node.name.toLowerCase();
 
       if (name.includes("plane") || name.includes("base") || name.includes("ground")) {
@@ -139,160 +137,38 @@ function Model({
         return;
       }
 
-      // ============================================================
-      // LOGIC FOR last.glb
-      // ============================================================
-      if (isLast) {
-        if (name.includes("crown_outer")) {
-          node.material = Array.isArray(node.material)
-            ? node.material.map((mat) => {
-                const m = mat.clone();
-                m.side = THREE.FrontSide;
-                return m;
-              })
-            : (() => {
-                const m = node.material.clone();
-                m.side = THREE.FrontSide;
-                return m;
-              })();
-
-          node.visible = !hideCrown;
-          node.castShadow = true;
-          node.receiveShadow = true;
-        } 
-        else if (name.includes("crown_inner")) {
-          let innerMaterial: THREE.Material;
-
-          if (hideAbutment) {
-            // When abutment hidden: use gradient texture + cream base to keep contrast
-            innerMaterial = new THREE.MeshPhysicalMaterial({
-              map: gradientTexture,
-              color: "#d6c7b6",           // cream base so gradient stays visible
-              roughness: 0.48,
-              metalness: 0,
-              reflectivity: 0.28,
-              clearcoat: 0.06,
-              clearcoatRoughness: 0.55,
-              envMapIntensity: 0.28,
-              side: THREE.DoubleSide,
-            });
-          } else {
-            // When abutment visible: plain colour fallback (subtle ceramic)
-            innerMaterial = new THREE.MeshPhysicalMaterial({
-              color: "#b7aa9a",
-              roughness: 0.55,
-              metalness: 0,
-              reflectivity: 0.18,
-              clearcoat: 0.04,
-              clearcoatRoughness: 0.6,
-              envMapIntensity: 0.18,
-              side: THREE.DoubleSide,
-            });
-          }
-
-          node.material = innerMaterial;
-          node.visible = !hideCrown;
-          node.castShadow = false;
-          node.receiveShadow = true;
-        }
-        else if (name.includes("abutment")) {
-          if (abutmentMaterial) {
-            node.material = Array.isArray(node.material)
-              ? node.material.map(() => abutmentMaterial.clone())
-              : abutmentMaterial.clone();
-          }
-
-          node.visible = !hideAbutment;
-          node.castShadow = true;
-          node.receiveShadow = true;
-        }
-      } 
-      // ============================================================
-      // OLD LOGIC FOR cutback.glb (completely unchanged)
-      // ============================================================
-      else {
-        if (name.includes("crown")) {
-          const originalMaterial = Array.isArray(node.material)
-            ? node.material.map((mat) => {
-                const m = mat.clone();
-                m.side = THREE.FrontSide;
-                return m;
-              })
-            : (() => {
-                const m = node.material.clone();
-                m.side = THREE.FrontSide;
-                return m;
-              })();
-
-          node.material = originalMaterial;
-          node.visible = !hideCrown;
-          node.castShadow = true;
-          node.receiveShadow = true;
-
-          const oldShell = node.children.find((child) => child.userData?.isInnerShell);
-          if (oldShell) node.remove(oldShell);
-
-          if (hideAbutment) {
-            const innerShell = new THREE.Mesh(
-              node.geometry.clone(),
-              new THREE.MeshStandardMaterial({
-                color: "#efe4cf",
-                roughness: 0.55,
-                metalness: 0,
-                side: THREE.BackSide,
-                depthWrite: true,
-                depthTest: true,
-              })
-            );
-
-            innerShell.userData = { isInnerShell: true };
-            innerShell.scale.set(0.94, 0.94, 0.94);
-            innerShell.renderOrder = 10;
-            innerShell.castShadow = false;
-            innerShell.receiveShadow = false;
-
-            node.add(innerShell);
-          }
-        } 
-        else if (name.includes("abutment")) {
-          if (abutmentMaterial) {
-            node.material = Array.isArray(node.material)
-              ? node.material.map(() => abutmentMaterial.clone())
-              : abutmentMaterial.clone();
-          }
-
-          node.visible = !hideAbutment;
-          node.castShadow = true;
-          node.receiveShadow = true;
-        }
+      if (name.includes("crown")) {
+        if (crownMaterial) applyMaterial(node, crownMaterial);
+        node.visible = !hideCrown;
       }
+      if (name.includes("abutment")) {
+        if (abutmentMaterial) applyMaterial(node, abutmentMaterial);
+        node.visible = !hideAbutment;
+      }
+
+      node.castShadow = true;
+      node.receiveShadow = true;
     });
 
-    // Center and scale the whole model
     const box = new THREE.Box3().setFromObject(clone);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
-    const scaleVal = 4 / Math.max(size.x, size.y, size.z);
-
-    clone.position.set(
-      -center.x * scaleVal,
-      -center.y * scaleVal,
-      -center.z * scaleVal
-    );
-    clone.scale.set(scaleVal, scaleVal, scaleVal);
+    const scale = 4 / Math.max(size.x, size.y, size.z);
+    clone.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+    clone.scale.set(scale, scale, scale);
 
     setModel(clone);
     if (onLoaded) onLoaded();
-  }, [scene, abutmentMaterial, hideCrown, hideAbutment, onLoaded, url, gradientTexture]);
+  }, [scene, crownMaterial, abutmentMaterial, hideCrown, hideAbutment, onLoaded]);
 
   return model ? <primitive object={model} /> : null;
 }
 
-useGLTF.preload("/3d-model/last.glb");
+useGLTF.preload("/3d-model/monolithic.glb");
 useGLTF.preload("/3d-model/cutback.glb");
 
 // ============================================================
-// FULL PRODUCT DATA (all variants – same as original)
+// PRODUCT DATA (unchanged)
 // ============================================================
 const productData: { [key: string]: any } = {
   "anterior-crown-screw": {
@@ -399,16 +275,16 @@ const productData: { [key: string]: any } = {
     ],
     aesthetic: {
       title: "Enhanced Aesthetic Version",
-      description: "For high-visibility anterior implant cases, we offer a cut-back Fusion-Zirconia bridge bonded to the custom abutments, finished with micro-layered feldspathic-enriched ceramic on the labial surfaces. This option enhances optical depth, translucency and natural characterisation while maintaining the strength of the zirconia core.",
+      description: "For high-visibility posterior implant cases, we offer a cut-back Fusion-Zirconia bridge bonded to the custom abutments, finished with micro-layered feldspathic-enriched ceramic on the visible surfaces. This option enhances optical depth, translucency and natural characterisation while maintaining the strength of the zirconia core.",
       whyChooseTitle: "Why Choose the Cut-Back Option",
       benefits: [
         "Increased vitality and enamel-like light refraction",
         "More natural surface texture and internal character",
         "Superior blending with adjacent natural teeth",
-        "Ideal for single centrals and aesthetic-critical implant sites",
+        "Ideal for aesthetic-critical posterior sites",
         "Maintains zirconia strength while elevating ceramic beauty",
       ],
-      conclusion: "This option replicates the subtle optical behaviour of natural anterior teeth, making it the preferred choice for demanding aesthetic implant restorations.",
+      conclusion: "This option replicates the subtle optical behaviour of natural teeth, making it the preferred choice for demanding aesthetic restorations.",
     },
   },
   "anterior-crown-cement": {
@@ -540,28 +416,31 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [open, setOpen] = useState<string | null>(null);
   const toggle = (section: string) => setOpen(open === section ? null : section);
 
-  const [modelMode, setModelMode] = useState<"cutback" | "last">("cutback");
+  const [modelMode, setModelMode] = useState<"cutback" | "monolith">("cutback");
+
   const [cutbackState, setCutbackState] = useState({
     crown: "Zirconia",
     abutment: "Titanium",
     hideCrown: false,
     hideAbutment: false,
   });
-  const [lastState, setLastState] = useState({
+
+  const [monolithState, setMonolithState] = useState({
     crown: "Zirconia",
     abutment: "Titanium",
     hideCrown: false,
     hideAbutment: false,
   });
 
-  const currentState = modelMode === "cutback" ? cutbackState : lastState;
-  const updateCurrentState = useCallback((updates: Partial<typeof currentState>) => {
+  const currentState = modelMode === "cutback" ? cutbackState : monolithState;
+  
+  const updateCurrentState = (updates: Partial<typeof currentState>) => {
     if (modelMode === "cutback") {
       setCutbackState(prev => ({ ...prev, ...updates }));
     } else {
-      setLastState(prev => ({ ...prev, ...updates }));
+      setMonolithState(prev => ({ ...prev, ...updates }));
     }
-  }, [modelMode]);
+  };
 
   const [isClient, setIsClient] = useState(false);
   const [modelError, setModelError] = useState(false);
@@ -573,10 +452,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   useEffect(() => {
     setModelLoading(true);
     setModelError(false);
-    if (modelMode === "cutback" && currentState.crown === "PFM") {
-      updateCurrentState({ crown: "Zirconia" });
-    }
-  }, [modelMode, updateCurrentState]);
+  }, [modelMode]);
 
   const handleZoom = (direction: "in" | "out") => {
     if (!controlsRef.current) return;
@@ -598,18 +474,25 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
     controlsRef.current.update();
   };
 
-  const handleModelLoaded = useCallback(() => {
-    setModelLoading(false);
-  }, []);
+  const handleModelLoaded = useCallback((loadedMode: "cutback" | "monolith") => {
+    if (loadedMode === modelMode) setModelLoading(false);
+  }, [modelMode]);
 
-  const isLastPFM = modelMode === "last" && currentState.crown === "PFM";
-  const showPFM = modelMode !== "cutback";
+  const isMonolithPFM = modelMode === "monolith" && currentState.crown === "PFM";
 
+  // When PFM is selected in Monolith, force hideAbutment off
   useEffect(() => {
-    if (isLastPFM && currentState.hideAbutment) updateCurrentState({ hideAbutment: false });
-  }, [isLastPFM, currentState.hideAbutment, updateCurrentState]);
+    if (isMonolithPFM && currentState.hideAbutment) {
+      updateCurrentState({ hideAbutment: false });
+    }
+  }, [isMonolithPFM, currentState.hideAbutment]);
 
   if (!product) return <div className="p-20 text-center text-gray-500">Product not found</div>;
+
+  // Determine which crown options to show based on mode
+  const crownOptions = modelMode === "cutback" ? ["Zirconia"] : ["Zirconia", "PFM"];
+  // Determine abutment options: if Monolith PFM, show none (because they'd be disabled)
+  const abutmentOptions = isMonolithPFM ? [] : ["Titanium", "Zirconia", "Anodised"];
 
   return (
     <main className="bg-white min-h-screen font-sans">
@@ -636,6 +519,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* LEFT COLUMN */}
           <div className="space-y-6">
+            {/* 3D VIEWER */}
             <div className="bg-gradient-to-b from-gray-50 to-[#a2d8b2]/20 h-[550px] border border-[#a2d8b2]/30 overflow-hidden relative shadow-sm group">
               {isClient && !modelError && modelLoading && <LoaderOverlay />}
 
@@ -645,7 +529,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                     toneMappingExposure: 1.2,
                     toneMapping: THREE.ACESFilmicToneMapping,
                   }}
-                  camera={{ position: [5, 3, 5], fov: 40 }}
+                  camera={{ position: [5, 3, 5], fov: 40, near: 0.1, far: 1000 }}
                   onError={() => setModelError(true)}
                 >
                   <color attach="background" args={["#616161"]} />
@@ -656,31 +540,24 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                       background={false}
                       environmentIntensity={1.3}
                     />
-                    {/* Standard lighting (unchanged) */}
                     <directionalLight position={[-5, 8, 3]} intensity={2} color="#fff5e8" castShadow />
                     <directionalLight position={[4, 5, 3]} intensity={1} color="#ffeedd" />
                     <pointLight position={[5, 4.5, 2.2]} intensity={3.5} color="#ffe6b3" distance={5} decay={2} />
                     <directionalLight position={[1, 2, -4]} intensity={1} color="#ffffff" />
-                    <ambientLight intensity={0.4} />
-
                     <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
                       <Center>
                         <Model
                           key={modelMode}
-                          url={`/3d-model/${modelMode === "cutback" ? "cutback" : "last"}.glb`}
+                          url={`/3d-model/${modelMode === "cutback" ? "cutback" : "monolithic"}.glb`}
                           crownType={currentState.crown}
-                          abutmentType={isLastPFM ? "Titanium" : currentState.abutment}
+                          abutmentType={isMonolithPFM ? "Titanium" : currentState.abutment}
                           hideCrown={currentState.hideCrown}
                           hideAbutment={currentState.hideAbutment}
-                          onLoaded={handleModelLoaded}
+                          onLoaded={() => handleModelLoaded(modelMode)}
                         />
                       </Center>
                     </Float>
-
-                    <CrownInteriorLight
-                      hideAbutment={currentState.hideAbutment}
-                      hideCrown={currentState.hideCrown}
-                    />
+                    <CrownInteriorLight hideAbutment={currentState.hideAbutment} />
                   </Suspense>
 
                   <OrbitControls
@@ -698,106 +575,218 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
               {isClient && !modelError && (
                 <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <button onClick={() => handleZoom("in")} className="bg-white/80 backdrop-blur-md p-3 shadow-lg border border-gray-100 hover:bg-[#a2d8b2] transition-all text-gray-600 hover:-translate-y-1"><ZoomIn className="w-5 h-5" /></button>
-                  <button onClick={() => handleZoom("out")} className="bg-white/80 backdrop-blur-md p-3 shadow-lg border border-gray-100 hover:bg-[#a2d8b2] transition-all text-gray-600 hover:-translate-y-1"><ZoomOut className="w-5 h-5" /></button>
-                  <button onClick={handleReset} className="bg-white/80 backdrop-blur-md p-3 shadow-lg border border-gray-100 hover:bg-gray-100 transition-all text-gray-600 mt-2 hover:-translate-y-1"><RotateCcw className="w-5 h-5" /></button>
+                  <button onClick={() => handleZoom("in")} className="bg-white/80 backdrop-blur-md p-3 shadow-lg border border-gray-100 hover:bg-[#a2d8b2] hover:text-teal-950 transition-all duration-300 text-gray-600 hover:-translate-y-1">
+                    <ZoomIn className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => handleZoom("out")} className="bg-white/80 backdrop-blur-md p-3 shadow-lg border border-gray-100 hover:bg-[#a2d8b2] hover:text-teal-950 transition-all duration-300 text-gray-600 hover:-translate-y-1">
+                    <ZoomOut className="w-5 h-5" />
+                  </button>
+                  <button onClick={handleReset} className="bg-white/80 backdrop-blur-md p-3 shadow-lg border border-gray-100 hover:bg-gray-100 transition-all duration-300 text-gray-600 mt-2 hover:-translate-y-1">
+                    <RotateCcw className="w-5 h-5" />
+                  </button>
                 </div>
               )}
 
               {isClient && modelError && (
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="text-center">
-                    <p className="text-red-400 mb-3">Unable to load 3D model</p>
-                    <button onClick={() => { setModelError(false); setModelLoading(true); }} className="px-6 py-2 bg-[#a2d8b2] text-gray-900 font-medium hover:bg-[#8ec29e]">Try Again</button>
+                    <p className="text-red-400 mb-3 font-medium">Unable to load 3D model</p>
+                    <button onClick={() => { setModelError(false); setModelLoading(true); }} className="px-6 py-2 bg-[#a2d8b2] text-gray-900 font-medium hover:bg-[#8ec29e] transition-colors shadow-sm">
+                      Try Again
+                    </button>
                   </div>
                 </div>
               )}
+
               {!isClient && (
                 <div className="w-full h-full flex items-center justify-center">
-                  <div className="animate-spin h-10 w-10 border-b-2 border-[#a2d8b2] mx-auto mb-4"></div>
-                  <p className="text-gray-500 font-medium tracking-wide">Initializing 3D viewer...</p>
+                  <div className="text-center">
+                    <div className="animate-spin h-10 w-10 border-b-2 border-[#a2d8b2] mx-auto mb-4"></div>
+                    <p className="text-gray-500 font-medium tracking-wide">Initializing 3D Viewer...</p>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* SINGLE CONTROL BOX – unchanged */}
-            <div className="bg-gray-50/50 p-6 border border-[#a2d8b2]/20 space-y-6">
+            {/* CONTROL BOX (includes mode toggle, crown, abutment) */}
+            <div className="flex flex-col gap-6 bg-gray-50/50 p-6 border border-[#a2d8b2]/20">
+              {/* Restoration Type toggle */}
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3 ml-1">Restoration Type</h3>
                 <div className="flex gap-2 flex-wrap">
-                  <button onClick={() => setModelMode("cutback")} className={`px-6 py-3 border transition-all duration-300 font-medium ${modelMode === "cutback" ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md" : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"}`}>Cutback</button>
-                  <button onClick={() => setModelMode("last")} className={`px-6 py-3 border transition-all duration-300 font-medium ${modelMode === "last" ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md" : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"}`}>Monolith</button>
+                  <button
+                    onClick={() => setModelMode("cutback")}
+                    className={`px-6 py-3 border transition-all duration-300 font-medium ${
+                      modelMode === "cutback"
+                        ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
+                    }`}
+                  >
+                    Cutback
+                  </button>
+                  <button
+                    onClick={() => setModelMode("monolith")}
+                    className={`px-6 py-3 border transition-all duration-300 font-medium ${
+                      modelMode === "monolith"
+                        ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
+                    }`}
+                  >
+                    Monolith
+                  </button>
                 </div>
               </div>
 
+              {/* Crown Material */}
               <div>
                 <div className="flex items-center gap-2 mb-3 ml-1">
                   <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">Crown Material</h3>
-                  <button onClick={() => updateCurrentState({ hideCrown: !currentState.hideCrown })} className="text-gray-500 hover:text-gray-700 p-1">{currentState.hideCrown ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
+                  <button
+                    onClick={() => updateCurrentState({ hideCrown: !currentState.hideCrown })}
+                    className="text-gray-500 hover:text-gray-700 transition-colors p-1 hover:bg-gray-200/50"
+                    title={currentState.hideCrown ? "Show Crown" : "Hide Crown"}
+                  >
+                    {currentState.hideCrown ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  <button onClick={() => updateCurrentState({ crown: "Zirconia" })} className={`px-4 py-2.5 border transition-all duration-300 font-medium ${currentState.crown === "Zirconia" ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md" : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"}`}>Zirconia</button>
-                  {showPFM && <button onClick={() => updateCurrentState({ crown: "PFM" })} className={`px-4 py-2.5 border transition-all duration-300 font-medium ${currentState.crown === "PFM" ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md" : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"}`}>PFM</button>}
+                  {crownOptions.map((item) => {
+                    const isActive = currentState.crown === item;
+                    return (
+                      <button
+                        key={item}
+                        onClick={() => updateCurrentState({ crown: item })}
+                        className={`px-4 py-2.5 border transition-all duration-300 font-medium ${
+                          isActive
+                            ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
+                            : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {!isLastPFM && (
+              {/* Abutment Material - only if there are options */}
+              {abutmentOptions.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3 ml-1">
                     <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">Abutment Material</h3>
-                    <button onClick={() => updateCurrentState({ hideAbutment: !currentState.hideAbutment })} className="text-gray-500 hover:text-gray-700 p-1">{currentState.hideAbutment ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
+                    <button
+                      onClick={() => updateCurrentState({ hideAbutment: !currentState.hideAbutment })}
+                      className="text-gray-500 hover:text-gray-700 transition-colors p-1 hover:bg-gray-200/50"
+                      title={currentState.hideAbutment ? "Show Abutment" : "Hide Abutment"}
+                    >
+                      {currentState.hideAbutment ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    {["Titanium", "Zirconia", "Anodised"].map(item => (
-                      <button key={item} onClick={() => updateCurrentState({ abutment: item })} className={`px-4 py-2.5 border transition-all duration-300 font-medium ${currentState.abutment === item ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md" : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"}`}>{item}</button>
-                    ))}
+                    {abutmentOptions.map((item) => {
+                      const isActive = currentState.abutment === item;
+                      return (
+                        <button
+                          key={item}
+                          onClick={() => updateCurrentState({ abutment: item })}
+                          className={`px-4 py-2.5 border transition-all duration-300 font-medium ${
+                            isActive
+                              ? "bg-[#a2d8b2] text-gray-900 border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/30"
+                              : "bg-white text-gray-600 border-gray-200 hover:border-[#a2d8b2] hover:bg-[#a2d8b2]/10"
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* RIGHT COLUMN – unchanged accordion sections */}
+          {/* RIGHT COLUMN (unchanged) */}
           <div className="space-y-6">
             <div className="hidden lg:block">
-              <span className="text-sm font-bold uppercase tracking-widest text-[#7ab88a] bg-[#a2d8b2]/20 px-3 py-1">{product.category}</span>
-              <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mt-5 leading-tight tracking-tight">{product.name}</h1>
+              <span className="text-sm font-bold uppercase tracking-widest text-[#7ab88a] bg-[#a2d8b2]/20 px-3 py-1">
+                {product.category}
+              </span>
+              <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mt-5 leading-tight tracking-tight">
+                {product.name}
+              </h1>
             </div>
             <div className="prose prose-lg max-w-none pb-2">
               <p className="text-gray-600 leading-relaxed font-light text-[1.05rem]">{product.description}</p>
             </div>
             <div className="space-y-3">
-              {/* Material Specifications */}
               <div className={`border overflow-hidden transition-all duration-300 ${open === "mat" ? "border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/20" : "border-gray-100 shadow-sm hover:border-[#a2d8b2]/50"}`}>
                 <button onClick={() => toggle("mat")} className={`w-full flex justify-between items-center px-4 py-3.5 text-left transition-colors ${open === "mat" ? "bg-[#a2d8b2]/10" : "bg-white hover:bg-[#a2d8b2]/5"}`}>
                   <span className={`text-lg font-bold transition-colors ${open === "mat" ? "text-gray-900" : "text-gray-800"}`}>Material Specifications</span>
-                  <div className={`p-1.5 transition-all duration-300 ${open === "mat" ? "bg-[#a2d8b2] text-gray-900 rotate-180" : "bg-gray-50 text-gray-400"}`}><ChevronDown className="w-4 h-4" /></div>
+                  <div className={`p-1.5 transition-all duration-300 ${open === "mat" ? "bg-[#a2d8b2] text-gray-900 rotate-180" : "bg-gray-50 text-gray-400"}`}>
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
                 </button>
                 <div className={`grid transition-all duration-300 ease-in-out ${open === "mat" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-                  <div className="overflow-hidden bg-white"><div className="p-4 pt-2 text-sm text-gray-600 border-t border-[#a2d8b2]/20"><p className="whitespace-pre-line leading-relaxed">{product.material}</p></div></div>
+                  <div className="overflow-hidden bg-white">
+                    <div className="p-4 pt-2 text-sm text-gray-600 border-t border-[#a2d8b2]/20">
+                      <p className="whitespace-pre-line leading-relaxed">{product.material}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Clinical Benefits */}
               <div className={`border overflow-hidden transition-all duration-300 ${open === "ben" ? "border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/20" : "border-gray-100 shadow-sm hover:border-[#a2d8b2]/50"}`}>
                 <button onClick={() => toggle("ben")} className={`w-full flex justify-between items-center px-4 py-3.5 text-left transition-colors ${open === "ben" ? "bg-[#a2d8b2]/10" : "bg-white hover:bg-[#a2d8b2]/5"}`}>
                   <span className={`text-lg font-bold transition-colors ${open === "ben" ? "text-gray-900" : "text-gray-800"}`}>Clinical Benefits</span>
-                  <div className={`p-1.5 transition-all duration-300 ${open === "ben" ? "bg-[#a2d8b2] text-gray-900 rotate-180" : "bg-gray-50 text-gray-400"}`}><ChevronDown className="w-4 h-4" /></div>
+                  <div className={`p-1.5 transition-all duration-300 ${open === "ben" ? "bg-[#a2d8b2] text-gray-900 rotate-180" : "bg-gray-50 text-gray-400"}`}>
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
                 </button>
                 <div className={`grid transition-all duration-300 ease-in-out ${open === "ben" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-                  <div className="overflow-hidden bg-white"><div className="p-4 pt-3 border-t border-[#a2d8b2]/20"><ul className="space-y-3">{product.benefits.map((b: string, i: number) => (<li key={i} className="flex gap-3 items-start text-sm text-gray-600"><span className="w-1.5 h-1.5 bg-[#a2d8b2] mt-1.5 flex-shrink-0 shadow-sm"></span><span className="leading-relaxed">{b}</span></li>))}</ul></div></div>
+                  <div className="overflow-hidden bg-white">
+                    <div className="p-4 pt-3 border-t border-[#a2d8b2]/20">
+                      <ul className="space-y-3">
+                        {product.benefits.map((b: string, i: number) => (
+                          <li key={i} className="flex gap-3 items-start text-sm text-gray-600">
+                            <span className="w-1.5 h-1.5 bg-[#a2d8b2] mt-1.5 flex-shrink-0 shadow-sm"></span>
+                            <span className="leading-relaxed">{b}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Aesthetic Option */}
               {product.aesthetic && (
                 <div className={`border overflow-hidden transition-all duration-300 ${open === "aes" ? "border-[#a2d8b2] shadow-md shadow-[#a2d8b2]/20" : "border-gray-100 shadow-sm hover:border-[#a2d8b2]/50"}`}>
                   <button onClick={() => toggle("aes")} className={`w-full flex justify-between items-center px-4 py-3.5 text-left transition-colors ${open === "aes" ? "bg-[#a2d8b2]/10" : "bg-white hover:bg-[#a2d8b2]/5"}`}>
                     <span className={`text-lg font-bold transition-colors ${open === "aes" ? "text-gray-900" : "text-gray-800"}`}>Cut-Back Aesthetic Option</span>
-                    <div className={`p-1.5 transition-all duration-300 ${open === "aes" ? "bg-[#a2d8b2] text-gray-900 rotate-180" : "bg-gray-50 text-gray-400"}`}><ChevronDown className="w-4 h-4" /></div>
+                    <div className={`p-1.5 transition-all duration-300 ${open === "aes" ? "bg-[#a2d8b2] text-gray-900 rotate-180" : "bg-gray-50 text-gray-400"}`}>
+                      <ChevronDown className="w-4 h-4" />
+                    </div>
                   </button>
                   <div className={`grid transition-all duration-300 ease-in-out ${open === "aes" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-                    <div className="overflow-hidden bg-white"><div className="p-4 pt-3 border-t border-[#a2d8b2]/20 space-y-4 text-sm"><p className="font-bold text-gray-900">{product.aesthetic.title}</p><p className="text-gray-600 leading-relaxed bg-[#a2d8b2]/10 p-3 border border-[#a2d8b2]/20">{product.aesthetic.description}</p><p className="font-bold text-gray-900 pt-1">{product.aesthetic.whyChooseTitle}</p><ul className="space-y-2.5">{product.aesthetic.benefits.map((b: string, i: number) => (<li key={i} className="flex gap-3 items-start text-gray-600"><span className="w-1.5 h-1.5 bg-[#a2d8b2] mt-1.5 flex-shrink-0 shadow-sm"></span><span className="leading-relaxed">{b}</span></li>))}</ul><p className="text-gray-600 leading-relaxed italic border-l-4 border-[#a2d8b2] pl-3 mt-3 py-1">{product.aesthetic.conclusion}</p></div></div>
+                    <div className="overflow-hidden bg-white">
+                      <div className="p-4 pt-3 border-t border-[#a2d8b2]/20 space-y-4 text-sm">
+                        <p className="font-bold text-gray-900">{product.aesthetic.title}</p>
+                        <p className="text-gray-600 leading-relaxed bg-[#a2d8b2]/10 p-3 border border-[#a2d8b2]/20">
+                          {product.aesthetic.description}
+                        </p>
+                        <p className="font-bold text-gray-900 pt-1">{product.aesthetic.whyChooseTitle}</p>
+                        <ul className="space-y-2.5">
+                          {product.aesthetic.benefits.map((b: string, i: number) => (
+                            <li key={i} className="flex gap-3 items-start text-gray-600">
+                              <span className="w-1.5 h-1.5 bg-[#a2d8b2] mt-1.5 flex-shrink-0 shadow-sm"></span>
+                              <span className="leading-relaxed">{b}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="text-gray-600 leading-relaxed italic border-l-4 border-[#a2d8b2] pl-3 mt-3 py-1">
+                          {product.aesthetic.conclusion}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
