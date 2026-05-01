@@ -146,21 +146,21 @@ function Model({
       const mat = originalMat.clone() as THREE.MeshStandardMaterial;
       switch (type) {
         case "Titanium":
-          mat.color.set("#c7ccd3");
-          mat.metalness = 0.95;
-          mat.roughness = 0.12;
+          mat.color.set("#ffffff");
+          mat.metalness = 1;
+          mat.roughness = 0.1;
           break;
         case "Zirconia":
           mat.color.set("#ffffff");
           mat.metalness = 0;
-          mat.roughness = 0.18;
+          mat.roughness = 0.1;
           mat.envMap = neutralEnvMap;
           mat.envMapIntensity = 0.9;
           break;
         case "Anodised":
-          mat.color.set("#d4af37");
-          mat.metalness = 0.9;
-          mat.roughness = 0.3;
+          mat.color.set("#d7c37d");
+          mat.metalness = 1;
+          mat.roughness = 0.1;
           break;
         default:
           return null;
