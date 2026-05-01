@@ -17,7 +17,7 @@ import * as THREE from "three";
 import { SkeletonUtils, GLTF } from "three-stdlib";
 
 // ============================================================
-// INTERIOR LIGHT – active only when abutment hidden (reduced intensity)
+// INTERIOR LIGHT – disabled (no extra light when abutment hidden)
 // ============================================================
 type InteriorLightProps = {
   hideAbutment: boolean;
@@ -25,28 +25,8 @@ type InteriorLightProps = {
 };
 
 function CrownInteriorLight({ hideAbutment, hideCrown }: InteriorLightProps) {
-  const active = hideAbutment && !hideCrown;
-
-  if (!active) return null;
-
-  return (
-    <>
-      <pointLight
-        position={[-0.55, 0.15, 0.15]}
-        intensity={0.6}
-        distance={0.8}
-        decay={2}
-        color="#fff8ee"
-      />
-      <pointLight
-        position={[0.55, 0.15, 0.15]}
-        intensity={0.6}
-        distance={0.8}
-        decay={2}
-        color="#fff8ee"
-      />
-    </>
-  );
+  // No interior light – crown should show exactly as is
+  return null;
 }
 
 // Helper: Create a linear gradient texture (top to bottom)
