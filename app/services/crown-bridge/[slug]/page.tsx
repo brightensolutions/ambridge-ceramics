@@ -268,7 +268,7 @@ function Model({
   return model ? <primitive object={model} /> : null;
 }
 
-useGLTF.preload("/3d-model/last.glb");
+useGLTF.preload("/3d-model/posteriorbridgetest.glb");
 useGLTF.preload("/3d-model/cutback.glb");
 
 // ============================================================
@@ -647,7 +647,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                       <Center>
                         <Model
                           key={modelMode}
-                          url={`/3d-model/${modelMode === "cutback" ? "cutback" : "last"}.glb`}
+                          url={`/3d-model/${modelMode === "cutback" ? "cutback" : "posteriorbridgetest"}.glb`}
                           crownType={currentState.crown}
                           abutmentType={isLastPFM ? "Titanium" : currentState.abutment}
                           hideCrown={currentState.hideCrown}
