@@ -304,6 +304,35 @@ const productData: { [key: string]: any } = {
       conclusion: "This option replicates the subtle optical behaviour of natural anterior teeth, making it the preferred choice for demanding aesthetic implant restorations.",
     },
   },
+  "anterior-crown-cement": {
+    name: "Anterior Crown",
+    category: "Cement retained",
+    fullName: "Anterior Cement-Retained Implant Crown",
+    description: `A digitally designed anterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is designed for cement retention, providing excellent marginal fit and aesthetic outcomes.`,
+    material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  \nCustom Titanium Abutment — CAD/CAM-milled Grade 5 titanium for optimal fit and biocompatibility.  \nBoth components are fully CE- and UKCA-marked with complete batch traceability.`,
+    benefits: [
+      "Cement-retained design for passive fit",
+      "Excellent marginal accuracy through CAD/CAM design",
+      "Fusion-Zirconia crown for natural translucency and long-term strength",
+      "Custom abutment for optimal emergence profile",
+      "Ideal for limited interarch space cases",
+      "Predictable aesthetic outcomes",
+      "Biocompatible, stable and fully traceable",
+    ],
+    aesthetic: {
+      title: "Enhanced Aesthetic Version",
+      description: "For high-visibility anterior implant cases, we offer a cut-back Fusion-Zirconia crown bonded to the custom abutment, finished with a micro-layered feldspathic-enriched ceramic on the labial surface.",
+      whyChooseTitle: "Why Choose the Cut-Back Option",
+      benefits: [
+        "Increased vitality and enamel-like light refraction",
+        "More natural surface texture and internal character",
+        "Superior blending with adjacent natural teeth",
+        "Ideal for single centrals and aesthetic-critical implant sites",
+        "Maintains zirconia strength while elevating ceramic beauty",
+      ],
+      conclusion: "This option replicates the subtle optical behaviour of natural anterior teeth.",
+    },
+  },
   "posterior-crown-screw": {
     name: "Posterior Crown",
     category: "Screw retained",
@@ -331,6 +360,31 @@ const productData: { [key: string]: any } = {
         "Maintains zirconia strength while elevating ceramic beauty",
       ],
       conclusion: "This option replicates the subtle optical behaviour of natural teeth, making it the preferred choice for demanding aesthetic restorations.",
+    },
+  },
+  "posterior-crown-cement": {
+    name: "Posterior Crown",
+    category: "Cement retained",
+    fullName: "Posterior Cement-Retained Implant Crown",
+    description: `A digitally designed posterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is designed for cement retention, providing excellent marginal fit and durability.`,
+    material: `Fusion-Zirconia — a multilayer zirconia with high flexural strength.  \nCustom Titanium Abutment — CAD/CAM-milled Grade 5 titanium.  \nBoth components are fully CE- and UKCA-marked with complete batch traceability.`,
+    benefits: [
+      "Cement-retained design for passive fit",
+      "Excellent marginal accuracy",
+      "Fusion-Zirconia crown for long-term strength",
+      "Custom abutment for optimal fit",
+      "Biocompatible and fully traceable",
+    ],
+    aesthetic: {
+      title: "Enhanced Aesthetic Version",
+      description: "For aesthetic-critical posterior cases, we offer enhanced ceramic layering on visible surfaces.",
+      whyChooseTitle: "Why Choose the Enhanced Option",
+      benefits: [
+        "More natural surface texture",
+        "Superior blending with adjacent teeth",
+        "Maintains core strength",
+      ],
+      conclusion: "Ideal for demanding aesthetic requirements.",
     },
   },
   "anterior-3-unit-bridge-screw": {
@@ -362,6 +416,31 @@ const productData: { [key: string]: any } = {
       conclusion: "This option replicates the subtle optical behaviour of natural anterior teeth, making it the preferred choice for demanding aesthetic implant restorations.",
     },
   },
+  "anterior-3-unit-bridge-cement": {
+    name: "Anterior 3 Unit Bridge",
+    category: "Cement retained",
+    fullName: "Anterior Cement-Retained 3 Unit Bridge",
+    description: `A digitally designed anterior 3-unit implant bridge combining our exclusive Fusion-Zirconia bridge with precision-milled CAD/CAM titanium custom abutments. Designed for cement retention with optimal aesthetics.`,
+    material: `Fusion-Zirconia bridge with custom titanium abutments. Both components are fully CE- and UKCA-marked.`,
+    benefits: [
+      "Cement-retained design",
+      "Excellent marginal accuracy",
+      "Fusion-Zirconia for natural aesthetics",
+      "Custom abutments for optimal fit",
+      "Biocompatible and traceable",
+    ],
+    aesthetic: {
+      title: "Enhanced Aesthetic Version",
+      description: "Enhanced ceramic layering for anterior aesthetics.",
+      whyChooseTitle: "Why Choose the Enhanced Option",
+      benefits: [
+        "Increased vitality",
+        "Natural surface texture",
+        "Superior blending",
+      ],
+      conclusion: "Ideal for demanding aesthetic cases.",
+    },
+  },
   "posterior-3-unit-bridge-screw": {
     name: "Posterior 3 Unit Bridge",
     category: "Screw retained",
@@ -389,85 +468,6 @@ const productData: { [key: string]: any } = {
         "Maintains zirconia strength while elevating ceramic beauty",
       ],
       conclusion: "This option replicates the subtle optical behaviour of natural anterior teeth, making it the preferred choice for demanding aesthetic implant restorations.",
-    },
-  },
-  "anterior-crown-cement": {
-    name: "Anterior Crown",
-    category: "Cement retained",
-    fullName: "Anterior Cement-Retained Implant Crown",
-    description: `A digitally designed anterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is designed for cement retention, providing excellent marginal fit and aesthetic outcomes.`,
-    material: `Fusion-Zirconia — a multilayer zirconia with a continuous dentine-to-enamel gradient, natural translucency and high flexural strength.  \nCustom Titanium Abutment — CAD/CAM-milled Grade 5 titanium for optimal fit and biocompatibility.  \nBoth components are fully CE- and UKCA-marked with complete batch traceability.`,
-    benefits: [
-      "Cement-retained design for passive fit",
-      "Excellent marginal accuracy through CAD/CAM design",
-      "Fusion-Zirconia crown for natural translucency and long-term strength",
-      "Custom abutment for optimal emergence profile",
-      "Ideal for limited interarch space cases",
-      "Predictable aesthetic outcomes",
-      "Biocompatible, stable and fully traceable",
-    ],
-    aesthetic: {
-      title: "Enhanced Aesthetic Version",
-      description: "For high-visibility anterior implant cases, we offer a cut-back Fusion-Zirconia crown bonded to the custom abutment, finished with a micro-layered feldspathic-enriched ceramic on the labial surface.",
-      whyChooseTitle: "Why Choose the Cut-Back Option",
-      benefits: [
-        "Increased vitality and enamel-like light refraction",
-        "More natural surface texture and internal character",
-        "Superior blending with adjacent natural teeth",
-        "Ideal for single centrals and aesthetic-critical implant sites",
-        "Maintains zirconia strength while elevating ceramic beauty",
-      ],
-      conclusion: "This option replicates the subtle optical behaviour of natural anterior teeth.",
-    },
-  },
-  "posterior-crown-cement": {
-    name: "Posterior Crown",
-    category: "Cement retained",
-    fullName: "Posterior Cement-Retained Implant Crown",
-    description: `A digitally designed posterior implant restoration combining our exclusive Fusion-Zirconia crown with a precision-milled CAD/CAM titanium custom abutment. The abutment is designed for cement retention, providing excellent marginal fit and durability.`,
-    material: `Fusion-Zirconia — a multilayer zirconia with high flexural strength.  \nCustom Titanium Abutment — CAD/CAM-milled Grade 5 titanium.  \nBoth components are fully CE- and UKCA-marked with complete batch traceability.`,
-    benefits: [
-      "Cement-retained design for passive fit",
-      "Excellent marginal accuracy",
-      "Fusion-Zirconia crown for long-term strength",
-      "Custom abutment for optimal fit",
-      "Biocompatible and fully traceable",
-    ],
-    aesthetic: {
-      title: "Enhanced Aesthetic Version",
-      description: "For aesthetic-critical posterior cases, we offer enhanced ceramic layering on visible surfaces.",
-      whyChooseTitle: "Why Choose the Enhanced Option",
-      benefits: [
-        "More natural surface texture",
-        "Superior blending with adjacent teeth",
-        "Maintains core strength",
-      ],
-      conclusion: "Ideal for demanding aesthetic requirements.",
-    },
-  },
-  "anterior-3-unit-bridge-cement": {
-    name: "Anterior 3 Unit Bridge",
-    category: "Cement retained",
-    fullName: "Anterior Cement-Retained 3 Unit Bridge",
-    description: `A digitally designed anterior 3-unit implant bridge combining our exclusive Fusion-Zirconia bridge with precision-milled CAD/CAM titanium custom abutments. Designed for cement retention with optimal aesthetics.`,
-    material: `Fusion-Zirconia bridge with custom titanium abutments. Both components are fully CE- and UKCA-marked.`,
-    benefits: [
-      "Cement-retained design",
-      "Excellent marginal accuracy",
-      "Fusion-Zirconia for natural aesthetics",
-      "Custom abutments for optimal fit",
-      "Biocompatible and traceable",
-    ],
-    aesthetic: {
-      title: "Enhanced Aesthetic Version",
-      description: "Enhanced ceramic layering for anterior aesthetics.",
-      whyChooseTitle: "Why Choose the Enhanced Option",
-      benefits: [
-        "Increased vitality",
-        "Natural surface texture",
-        "Superior blending",
-      ],
-      conclusion: "Ideal for demanding aesthetic cases.",
     },
   },
   "posterior-3-unit-bridge-cement": {
@@ -622,7 +622,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
               {isClient && !modelError && (
                 <Canvas
                   gl={{
-                    toneMappingExposure: 1.2,
+                    toneMappingExposure: modelMode === "last" ? 1.0 : 1.2,
                     toneMapping: THREE.ACESFilmicToneMapping,
                   }}
                   camera={{ position: [5, 3, 5], fov: 40 }}
@@ -631,17 +631,56 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                   <color attach="background" args={["#616161"]} />
 
                   <Suspense fallback={null}>
-                    <Environment
-                      files="/3d-model/Industrial_Room.exr"
-                      background={false}
-                      environmentIntensity={1.3}
-                    />
-                    {/* Standard lighting (unchanged) */}
-                    <directionalLight position={[-5, 8, 3]} intensity={2} color="#fff5e8" castShadow />
-                    <directionalLight position={[4, 5, 3]} intensity={1} color="#ffeedd" />
-                    <pointLight position={[5, 4.5, 2.2]} intensity={3.5} color="#ffe6b3" distance={5} decay={2} />
-                    <directionalLight position={[1, 2, -4]} intensity={1} color="#ffffff" />
-                    <ambientLight intensity={0.4} />
+                    {modelMode === "last" ? (
+                      // ============================================================
+                      // LIGHTING FOR POSTERIOR MODEL (last.glb / posteriorbridgetest.glb)
+                      // Directional Light: 1.0, Ambient Light: 0.5, Environment Intensity: 1.0, Environment: City
+                      // ============================================================
+                      <>
+                        <Environment preset="city" background={false} environmentIntensity={1.0} />
+                        
+                        {/* Main directional light - intensity 1.0 */}
+                        <directionalLight 
+                          position={[5, 10, 5]} 
+                          intensity={1.0} 
+                          color="#ffffff" 
+                          castShadow 
+                        />
+                        
+                        {/* Fill light - reduced intensity */}
+                        <directionalLight 
+                          position={[-3, 5, 2]} 
+                          intensity={0.5} 
+                          color="#fff5e8" 
+                        />
+                        
+                        {/* Ambient light - intensity 0.5 */}
+                        <ambientLight intensity={0.5} />
+                        
+                        {/* Rim light for edge definition */}
+                        <directionalLight 
+                          position={[0, 2, -4]} 
+                          intensity={0.3} 
+                          color="#ffffff" 
+                        />
+                      </>
+                    ) : (
+                      // ============================================================
+                      // ORIGINAL LIGHTING FOR CUTBACK MODEL (unchanged)
+                      // ============================================================
+                      <>
+                        {/* <Environment
+                          files="/3d-model/Industrial_Room.exr"
+                          background={false}
+                          environmentIntensity={1.3}
+                        /> */}
+                        <directionalLight position={[-5, 8, 3]} intensity={2} color="#fff5e8" castShadow />
+                        <directionalLight position={[4, 5, 3]} intensity={1} color="#ffeedd" />
+                        <pointLight position={[5, 4.5, 2.2]} intensity={3.5} color="#ffe6b3" distance={5} decay={2} />
+                        <directionalLight position={[1, 2, -4]} intensity={1} color="#ffffff" />
+                        <ambientLight intensity={0.4} />
+                      </>
+                    )}
 
                     <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
                       <Center>
