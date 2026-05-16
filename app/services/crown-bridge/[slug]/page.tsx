@@ -12,7 +12,7 @@ import {
   Environment,
   Float,
 } from "@react-three/drei";
-import { useState, Suspense, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { SkeletonUtils, GLTF } from "three-stdlib";
 
@@ -304,7 +304,7 @@ function ProductDetailClient({ product, slug }: { product: any; slug: string }) 
                   toneMapping: THREE.ACESFilmicToneMapping,
                 }}
                 camera={{ position: [0, -0.6, 8.5], fov: 40 }} 
-                style={{ touchAction: 'none' }}
+                style={{ touchAction: 'pan-y' }}
               >
                 <color attach="background" args={["#616161"]} />
                 <Suspense fallback={null}>
@@ -360,6 +360,9 @@ function ProductDetailClient({ product, slug }: { product: any; slug: string }) 
               <button onClick={() => handleZoom("out")} className="bg-white/80 backdrop-blur-md p-2.5 shadow-sm border border-white/20 rounded-full hover:bg-white transition-all text-gray-600"><ZoomOut className="w-4 h-4" /></button>
               <button onClick={handleReset} className="bg-white/80 backdrop-blur-md p-2.5 shadow-sm border border-white/20 rounded-full hover:bg-white transition-all text-gray-600 mt-2"><RotateCcw className="w-4 h-4" /></button>
             </div>
+
+            {/* Invisible safe scroll zone for mobile users below the control buttons */}
+            <div className="absolute top-44 right-0 w-24 bottom-[240px] z-20 lg:hidden pointer-events-auto" style={{ touchAction: "pan-y" }} />
 
             {/* Tall Gradient Overlay Background */}
             <div className="absolute bottom-0 left-0 right-0 h-[400px] bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none z-20" />
