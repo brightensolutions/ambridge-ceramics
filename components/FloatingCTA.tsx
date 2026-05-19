@@ -11,7 +11,7 @@ export default function FloatingCTA() {
         bottom-6 
         right-6 
         z-[90]
-        bg-dentalForest 
+        bg-[#1A3626] 
         text-white
         px-6 
         py-4 
@@ -22,7 +22,8 @@ export default function FloatingCTA() {
         uppercase 
         tracking-widest
         hover:scale-105
-        transition
+        transition-all
+        duration-300
       "
     >
       Send Case
