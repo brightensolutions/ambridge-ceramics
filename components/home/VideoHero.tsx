@@ -74,18 +74,8 @@ export default function VideoHero() {
 
       </div>
 
-      {/* Live Stream Micro-indicator in the Corner */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.8, duration: 0.6 }}
-        className="absolute bottom-8 right-8 z-10 hidden md:flex items-center gap-3 bg-black/40 backdrop-blur-md border border-white/10 px-4 py-2.5 rounded-full"
-      >
-        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
-          Laboratory Feed Loop
-        </span>
-      </motion.div>
+     
+      
       
     </section>
   );
