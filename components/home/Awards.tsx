@@ -12,15 +12,16 @@ export default function Awards() {
   ];
 
   return (
-    <section className="relative bg-[#111] py-20 px-6 lg:px-12 overflow-hidden">
-      {/* Edge fade gradients for premium feel */}
-      <div className="pointer-events-none absolute left-0 top-0 h-full w-32 bg-gradient-to-r from-[#111] to-transparent z-10" />
-      <div className="pointer-events-none absolute right-0 top-0 h-full w-32 bg-gradient-to-l from-[#111] to-transparent z-10" />
+    <section className="relative bg-[#111] py-24 lg:py-32 px-6 lg:px-12 overflow-hidden">
+      {/* Edge fade gradients for premium feel - increased width for larger scale */}
+      <div className="pointer-events-none absolute left-0 top-0 h-full w-40 bg-gradient-to-r from-[#111] to-transparent z-10" />
+      <div className="pointer-events-none absolute right-0 top-0 h-full w-40 bg-gradient-to-l from-[#111] to-transparent z-10" />
 
-      <div className="container mx-auto max-w-[1500px] space-y-12">
+      {/* Increased vertical gap here from space-y-16 to space-y-24 */}
+      <div className="container mx-auto max-w-[1500px] space-y-24">
 
         {/* Label */}
-        <div className="text-white/30 text-[10px] font-black tracking-[0.4em] uppercase text-center">
+        <div className="text-white/30 text-xs sm:text-sm font-black tracking-[0.4em] uppercase text-center">
           Accreditations & Clinical Trust
         </div>
 
@@ -32,18 +33,18 @@ export default function Awards() {
             duration: 30,
             ease: "linear",
           }}
-          className="flex gap-10 w-max"
+          className="flex gap-12 w-max"
         >
           {[...badges, ...badges].map((badge, index) => (
             <div
               key={index}
               className="
-                px-8 py-4
+                px-10 py-5
                 border border-white/10
-                rounded-sm
+                rounded-md
                 text-white
-                text-[11px]
-                font-semibold
+                text-sm
+                font-bold
                 tracking-widest
                 uppercase
                 bg-white/5

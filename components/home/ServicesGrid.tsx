@@ -1,91 +1,106 @@
 "use client";
 
 import Reveal from "../Reveal";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Users, Award, Cpu, ShieldCheck, Clock, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
-const SERVICES = [
+const WHY_CHOOSE_US = [
     {
-        title: "Crowns, Bridges & Veneers",
-        desc: "Advanced ceramic restorations with exceptional aesthetic detail",
-        link: "/",
-        image: "bg-gray-100" 
+        icon: Users,
+        title: "GDC Registered, Highly Experienced Technicians",
+        desc: "Every member of our technical team is GDC registered and brings many years of specialist experience in ceramics, implants, digital workflows and prosthetics."
     },
     {
-        title: "Implant Solutions",
-        desc: "Custom abutments and screw‑retained restorations compatible with all major implant systems",
-        link: "/",
-        image: "bg-gray-200"
+        icon: Award,
+        title: "Award Winning Expertise",
+        desc: "Our technicians have been part of multiple award winning teams, working collaboratively in the creation of award winning restorations for many years."
     },
     {
-        title: "Digital Smile Design",
-        desc: "Comprehensive visual planning for predictable cosmetic results",
-        link: "/",
-        image: "bg-gray-100"
+        icon: Cpu,
+        title: "Digital Accuracy & Consistency",
+        desc: "Advanced CAD/CAM workflows, 3D planning and strict quality control ensure accuracy, repeatability and predictable clinical outcomes across every case."
     },
     {
-        title: "Clear Aligner Solutions",
-        desc: "Orthodontic planning and aligner design tailored to your workflow",
-        link: "/",
-        image: "bg-gray-200"
+        icon: ShieldCheck,
+        title: "Premium, Fully Traceable Materials",
+        desc: "We use only CE- and UKCA-marked materials from trusted manufacturers, with full traceability for every case ensuring compliance and patient safety."
+    },
+    {
+        icon: Clock,
+        title: "Reliable Turnaround & Communication",
+        desc: "Clear communication, dependable lead times and a service designed around the needs of modern clinical practice — so you can plan with confidence."
     }
 ];
 
 export default function ServicesGrid() {
     return (
-        <section className="py-32 px-6 lg:px-12 bg-white">
+        <section className="pt-16 lg:pt-24 pb-20 lg:pb-32 px-6 lg:px-12 bg-white">
             <div className="container mx-auto max-w-[1500px]">
 
-                <Reveal>
-                    <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
-                        <div className="max-w-2xl">
-                            <span className="text-[10px] tracking-[0.4em] uppercase font-black text-gray-400 mb-4 block">
-                                Our Expertise
-                            </span>
-                            <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-tight">
-                                TAILORED SOLUTIONS FOR DIGITAL AND ANALOGUE WORKFLOWS 
-                            </h2>
-                        </div>
+                {/* HEADER SECTION (Matched to Testimonial Component typography) */}
+                <div className="text-center mb-16 max-w-4xl mx-auto">
+                    <Reveal>
+                        <span className="text-[10px] sm:text-xs tracking-[0.3em] uppercase font-bold text-gray-400 mb-4 block">
+                            — WHY CHOOSE AMBRIDGE CERAMICS —
+                        </span>
+                    </Reveal>
+                    <Reveal delay={0.1}>
+                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-black tracking-tight leading-none uppercase">
+                            A Laboratory Built Around <br className="hidden sm:inline"/> Your Clinical Success
+                        </h2>
+                    </Reveal>
+                </div>
 
-                        <Link
-                            href="/services"
-                            className="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest border-b border-gray-900 pb-1 hover:text-dentalForest hover:border-dentalForest transition-all"
-                        >
-                            View All Services
-                            <ArrowUpRight size={14} className="group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                    </div>
-                </Reveal>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                    {SERVICES.map((service, index) => (
-                        <Reveal key={index} delay={index * 0.1}>
-                            <Link href={service.link} className="group block relative overflow-hidden rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors duration-500">
-                                <div className="p-10 md:p-14 h-full flex flex-col justify-between min-h-[300px]">
-
+                {/* 3x2 GRID LAYOUT */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {WHY_CHOOSE_US.map((item, index) => {
+                        const IconComponent = item.icon;
+                        return (
+                            <Reveal key={index} delay={index * 0.05}>
+                                <div className="bg-white border border-gray-100 p-8 rounded-xl flex flex-col justify-between h-full min-h-[260px] shadow-sm transition-all hover:shadow-md hover:border-gray-200">
                                     <div>
-                                        <h3 className="text-2xl font-bold mb-3 group-hover:text-dentalForest transition-colors">
-                                            {service.title}
+                                        {/* Light Neutral Icon Wrap */}
+                                        <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center border border-gray-100 mb-6">
+                                            <IconComponent size={20} className="text-gray-600" />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-gray-900 mb-3 tracking-tight leading-snug">
+                                            {item.title}
                                         </h3>
-                                        <p className="text-gray-500 max-w-sm leading-relaxed text-sm">
-                                            {service.desc}
+                                        <p className="text-gray-500 leading-relaxed text-sm">
+                                            {item.desc}
                                         </p>
                                     </div>
-
-                                    <div className="flex justify-end mt-10">
-                                        <span className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center group-hover:bg-dentalForest group-hover:text-black group-hover:border-transparent transition-all">
-                                            <ArrowUpRight size={18} />
-                                        </span>
-                                    </div>
-
-                                    {/* Decorative faint background number */}
-                                    <span className="absolute bottom-[-10%] left-[-5%] text-9xl font-black text-gray-200/50 pointer-events-none group-hover:translate-x-4 transition-transform duration-700">
-                                        0{index + 1}
-                                    </span>
                                 </div>
-                            </Link>
-                        </Reveal>
-                    ))}
+                            </Reveal>
+                        );
+                    })}
+
+                    {/* 6TH CARD: DARK FOREST GREEN CTA CARD */}
+                    <Reveal delay={0.3}>
+                        <div className="bg-[#1A3626] text-white p-8 rounded-xl flex flex-col justify-between h-full min-h-[260px] shadow-sm">
+                            <div>
+                                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/10 mb-6">
+                                    <MessageSquare size={20} className="text-white/90" />
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">
+                                    Ready to discuss your need?
+                                </h3>
+                                <p className="text-gray-300 leading-relaxed text-sm mb-8">
+                                    Our technicians are available to consult directly with clinicians on complex or high aesthetic cases before submission.
+                                </p>
+                            </div>
+
+                            <div>
+                                <Link
+                                    href="/send-case"
+                                    className="inline-flex items-center justify-center gap-2 bg-[#a2d8b2] text-[#1A3626] px-6 py-3 rounded-md font-bold text-xs uppercase tracking-wider hover:bg-opacity-90 transition-all group w-full sm:w-auto"
+                                >
+                                    Send a Case
+                                    <ArrowUpRight size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+                                </Link>
+                            </div>
+                        </div>
+                    </Reveal>
                 </div>
 
             </div>
