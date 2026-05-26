@@ -9,31 +9,23 @@ import Testimonial from "../components/home/Testimonial";
 import QuickAccess from "../components/home/DigitalEcosystem";
 import Awards from "../components/home/Awards";
 import Footer from "../components/Footer";
-
-// Explicitly pointing to the local directory structure to prevent object/index binding errors
 import FeaturedServices from "../components/home/FeaturedServices";
-import VideoHero from "../components/home/VideoHero";
+import AboutIntro from "../components/home/AboutIntro"; // NEW
 
 export default function Home() {
   return (
     <main className="bg-white text-black">
       <Navbar />
       <Hero3D />
-      <VideoHero />
+
+      {/* NEW INTRODUCTION SECTION */}
+      <AboutIntro />
+
       <FeaturedServices />
-      
-      {/* 3. SERVICES GRID — Four core service offerings */}
       <ServicesGrid />
-
-      {/* 6. STATS COUNTER — Animated performance metrics */}
       <StatsCounter />
-
-      {/* 7. TESTIMONIAL — Featured clinician quote */}
       <Testimonial />
-
-      {/* 9. AWARDS — Scrolling accreditation marquee */}
       <Awards />
-
       <Footer />
     </main>
   );
